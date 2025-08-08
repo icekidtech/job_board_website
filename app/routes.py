@@ -28,6 +28,116 @@ def jobs():
     
     return render_template('jobs.html', jobs=jobs)
 
+@main.route('/post_job', methods=['GET', 'POST'])
+def post_job():
+    """Job posting route - allows employers to create new job postings"""
+    # Check if user is logged in
+    if not is_logged_in():
+        flash('Please log in to post a job.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Check if user is an employer
+    if session.get('user_role') != 'employer':
+        flash('Only employers can post jobs. Please register as an employer.', 'error')
+        return redirect(url_for('main.jobs'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        company_name = request.form.get('company_name', '').strip()
+        location = request.form.get('location', '').strip()
+        salary_range = request.form.get('salary_range', '').strip()
+        job_type = request.form.get('job_type', 'full-time')
+        
+        # Basic validation
+        if not title:
+            flash('Job title is required.', 'error')
+            return render_template('post_job.html')
+        
+        if not description:
+            flash('Job description is required.', 'error')
+            return render_template('post_job.html')
+        
+        if len(title) > 200:
+            flash('Job title must be 200 characters or less.', 'error')
+            return render_template('post_job.html')
+        
+        try:
+            # Create new job posting
+            new_job = JobPosting(
+                title=title,
+                description=description,
+                employer_id=session['user_id'],
+                company_name=company_name if company_name else None,
+                location=location if location else None,
+                salary_range=salary_range if salary_range else None,
+                job_type=job_type
+            )
+            
+            db.session.add(new_job)
+            db.session.commit()
+            
+            flash(f'Job "{title}" posted successfully!', 'success')
+            return redirect(url_for('main.jobs'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while posting the job. Please try again.', 'error')
+            return render_template('post_job.html')
+    
+    return render_template('post_job.html')
+
+@main.route('/apply_job/<int:job_id>', methods=['POST'])
+def apply_job(job_id):
+    """Job application route - allows seekers to apply for jobs"""
+    # Check if user is logged in
+    if not is_logged_in():
+        flash('Please log in to apply for jobs.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Check if user is a seeker
+    if session.get('user_role') != 'seeker':
+        flash('Only job seekers can apply for jobs. Please register as a job seeker.', 'error')
+        return redirect(url_for('main.jobs'))
+    
+    # Check if job exists and is active
+    job = JobPosting.query.filter_by(id=job_id, is_active=True).first()
+    if not job:
+        flash('Job not found or no longer active.', 'error')
+        return redirect(url_for('main.jobs'))
+    
+    # Check if user already applied for this job
+    existing_application = Application.query.filter_by(
+        job_id=job_id, 
+        seeker_id=session['user_id']
+    ).first()
+    
+    if existing_application:
+        flash('You have already applied for this job.', 'info')
+        return redirect(url_for('main.jobs'))
+    
+    # Get cover letter from form (optional)
+    cover_letter = request.form.get('cover_letter', '').strip()
+    
+    try:
+        # Create new application
+        new_application = Application(
+            job_id=job_id,
+            seeker_id=session['user_id'],
+            cover_letter=cover_letter if cover_letter else None
+        )
+        
+        db.session.add(new_application)
+        db.session.commit()
+        
+        flash(f'Successfully applied for "{job.title}"!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while submitting your application. Please try again.', 'error')
+    
+    return redirect(url_for('main.jobs'))
+
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     """Login route - handles user authentication"""
