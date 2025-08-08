@@ -39,7 +39,13 @@ def test_database_connection():
 
 def create_app():
     """Factory function to create Flask app"""
-    app = Flask(__name__)
+    # Get the project root directory (one level up from app/)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    # Create Flask app with correct template and static folder paths
+    app = Flask(__name__, 
+                template_folder=os.path.join(project_root, 'templates'),
+                static_folder=os.path.join(project_root, 'static'))
     
     # Configure SQLAlchemy
     app.config['SQLALCHEMY_DATABASE_URI'] = DatabaseConfig.SQLALCHEMY_DATABASE_URI
