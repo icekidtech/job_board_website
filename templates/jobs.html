@@ -6,28 +6,35 @@
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h2">Job Listings</h1>
-            <a href="#" class="btn btn-primary">Post a Job</a>
+            <h1 class="h2">
+                <i class="fas fa-briefcase text-primary me-2"></i>Job Listings
+            </h1>
+            <a href="#" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Post a Job
+            </a>
         </div>
         
         <!-- Search and Filter Section -->
-        <div class="card mb-4">
+        <div class="card mb-4 search-card">
             <div class="card-body">
-                <form method="GET" action="{{ url_for('main.jobs') }}">
+                <form id="searchForm" method="GET" action="{{ url_for('main.jobs') }}">
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <input type="text" class="form-control" name="search" placeholder="Search jobs..." 
-                                   value="{{ request.args.get('search', '') }}">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" name="search" placeholder="Search jobs..." 
+                                       value="{{ request.args.get('search', '') }}">
+                            </div>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <select class="form-control" name="location">
+                            <select class="form-select" name="location">
                                 <option value="">All Locations</option>
                                 <option value="remote">Remote</option>
                                 <option value="onsite">On-site</option>
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <select class="form-control" name="job_type">
+                            <select class="form-select" name="job_type">
                                 <option value="">All Types</option>
                                 <option value="full-time">Full-time</option>
                                 <option value="part-time">Part-time</option>
@@ -36,93 +43,118 @@
                             </select>
                         </div>
                         <div class="col-md-2 mb-3">
-                            <button type="submit" class="btn btn-outline-primary w-100">Search</button>
+                            <button type="submit" class="btn btn-outline-primary w-100 search-btn">
+                                <i class="fas fa-search me-1"></i>Search
+                            </button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
         
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="text-center py-5 d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Searching for jobs...</p>
+        </div>
+        
         <!-- Job Listings -->
-        {% if jobs.items %}
-            {% for job in jobs.items %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h5 class="card-title mb-2">{{ job.title }}</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">
-                                {{ job.company_name or job.employer.username }}
-                                {% if job.location %}
-                                    • {{ job.location }}
-                                {% endif %}
-                            </h6>
-                            <p class="card-text">
-                                {{ job.description[:150] }}...
-                            </p>
-                            <div class="d-flex gap-2">
-                                <span class="badge bg-primary">{{ job.job_type.title() }}</span>
-                                {% if job.salary_range %}
-                                    <span class="badge bg-success">{{ job.salary_range }}</span>
-                                {% endif %}
+        <div id="jobListings">
+            {% if jobs.items %}
+                {% for job in jobs.items %}
+                <div class="card mb-3 job-card" data-aos="fade-up">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="card-title mb-2">{{ job.title }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-building me-1"></i>{{ job.company_name or job.employer.username }}
+                                    {% if job.location %}
+                                        <i class="fas fa-map-marker-alt me-1 ms-2"></i>{{ job.location }}
+                                    {% endif %}
+                                </h6>
+                                <p class="card-text">
+                                    {{ job.description[:150] }}...
+                                </p>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-clock me-1"></i>{{ job.job_type.title() }}
+                                    </span>
+                                    {% if job.salary_range %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-dollar-sign me-1"></i>{{ job.salary_range }}
+                                        </span>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-4 text-md-end">
-                            <small class="text-muted d-block mb-2">
-                                Posted {{ job.posted_date.strftime('%B %d, %Y') }}
-                            </small>
-                            <a href="#" class="btn btn-outline-primary">View Details</a>
+                            <div class="col-md-4 text-md-end">
+                                <small class="text-muted d-block mb-2">
+                                    <i class="fas fa-calendar me-1"></i>Posted {{ job.posted_date.strftime('%B %d, %Y') }}
+                                </small>
+                                <a href="#" class="btn btn-outline-primary job-detail-btn">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-            
-            <!-- Pagination -->
-            {% if jobs.pages > 1 %}
-            <nav aria-label="Job listings pagination">
-                <ul class="pagination justify-content-center">
-                    {% if jobs.has_prev %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('main.jobs', page=jobs.prev_num) }}">Previous</a>
-                        </li>
-                    {% endif %}
-                    
-                    {% for page_num in jobs.iter_pages() %}
-                        {% if page_num %}
-                            {% if page_num != jobs.page %}
-                                <li class="page-item">
-                                    <a class="page-link" href="{{ url_for('main.jobs', page=page_num) }}">{{ page_num }}</a>
-                                </li>
-                            {% else %}
-                                <li class="page-item active">
-                                    <span class="page-link">{{ page_num }}</span>
-                                </li>
-                            {% endif %}
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if jobs.pages > 1 %}
+                <nav aria-label="Job listings pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if jobs.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('main.jobs', page=jobs.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
                             </li>
                         {% endif %}
-                    {% endfor %}
-                    
-                    {% if jobs.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('main.jobs', page=jobs.next_num) }}">Next</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
+                        
+                        {% for page_num in jobs.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != jobs.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('main.jobs', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if jobs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('main.jobs', page=jobs.next_num) }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+            {% else %}
+                <!-- No Jobs Found -->
+                <div class="text-center py-5 no-jobs">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No job listings found</h4>
+                    <p class="text-muted">Be the first to post a job opportunity!</p>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Post a Job
+                    </a>
+                </div>
             {% endif %}
-            
-        {% else %}
-            <!-- No Jobs Found -->
-            <div class="text-center py-5">
-                <h4 class="text-muted">No job listings found</h4>
-                <p class="text-muted">Be the first to post a job opportunity!</p>
-                <a href="#" class="btn btn-primary">Post a Job</a>
-            </div>
-        {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
