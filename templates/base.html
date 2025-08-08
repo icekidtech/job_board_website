@@ -55,8 +55,11 @@
                                     <i class="fas fa-user me-1"></i>Profile
                                 </a></li>
                                 {% if current_user().role == 'employer' %}
-                                    <li><a class="dropdown-item" href="#">
+                                    <li><a class="dropdown-item" href="{{ url_for('main.post_job') }}">
                                         <i class="fas fa-plus me-1"></i>Post Job
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#">
+                                        <i class="fas fa-briefcase me-1"></i>My Jobs
                                     </a></li>
                                 {% else %}
                                     <li><a class="dropdown-item" href="#">
