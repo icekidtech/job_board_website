@@ -9,6 +9,7 @@
 6. [Routes and Templates](#routes-and-templates)
 7. [API Endpoints](#api-endpoints)
 8. [Development Guidelines](#development-guidelines)
+9. [User Interface Design](#user-interface-design)
 
 ## Project Overview
 
@@ -436,17 +437,214 @@ All templates use Bootstrap 5 for responsive design:
 - Validate API endpoints
 - Test user interface functionality
 
-## Next Steps
+## User Interface Design
 
-1. ✅ Database setup and connection
-2. ✅ Create database models
-3. ✅ Basic routes and templates
-4. 🔄 Implement user authentication
-5. 🔄 Build job listing functionality
-6. 🔄 Create application system
-7. 🔄 Add search and filtering
-8. 🔄 Implement admin features
+### UI Philosophy
 
----
+The Job Board website follows a modern, clean design philosophy with the following principles:
 
-*Last updated: August 8, 2025*
+- **User-Centric Design**: Intuitive navigation and clear call-to-action buttons
+- **Responsive Layout**: Mobile-first approach ensuring compatibility across all devices
+- **Accessibility**: Proper contrast ratios, semantic HTML, and keyboard navigation support
+- **Performance**: Optimized animations and lightweight assets for fast loading
+
+### Design System
+
+#### Color Palette
+- **Primary**: `#0d6efd` (Blue) - Used for main actions and branding
+- **Secondary**: `#6c757d` (Gray) - Used for secondary elements
+- **Success**: `#198754` (Green) - Used for positive actions and confirmations
+- **Info**: `#0dcaf0` (Light Blue) - Used for informational elements
+- **Warning**: `#ffc107` (Yellow) - Used for warnings and highlights
+- **Danger**: `#dc3545` (Red) - Used for errors and destructive actions
+
+#### Typography
+- **Font Family**: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+- **Headings**: Bold weights with appropriate line heights
+- **Body Text**: Regular weight with 1.6 line height for readability
+
+#### Spacing and Layout
+- **Grid System**: Bootstrap 5 responsive grid
+- **Border Radius**: 0.5rem for consistent rounded corners
+- **Shadows**: Layered shadow system for depth perception
+- **Animations**: Smooth transitions and hover effects
+
+### Template Structure
+
+#### Base Template (`base.html`)
+**Purpose**: Provides the foundational layout and common elements for all pages.
+
+**Features**:
+- Responsive navigation bar with collapsible mobile menu
+- Flash message system for user feedback
+- Footer with copyright information
+- Font Awesome icons integration
+- Bootstrap 5 CSS and JavaScript includes
+
+**Key Components**:
+```html
+- Navigation bar with brand and menu items
+- Flash message container with auto-dismiss functionality  
+- Main content container with proper spacing
+- Footer with gradient background
+- JavaScript includes for interactive features
+```
+
+#### Homepage Template (`home.html`)
+**Purpose**: Welcome page that introduces users to the platform and displays key statistics.
+
+**Features**:
+- Animated welcome message with fade-in effects
+- Statistics cards showing job and user counts with counter animations
+- Feature highlights with hover effects
+- Call-to-action buttons with gradient backgrounds
+- Responsive card layout for mobile devices
+
+**Interactive Elements**:
+- Counter animations for statistics
+- Hover effects on feature cards
+- Animated call-to-action buttons
+- Tooltips for additional information
+
+#### Job Listings Template (`jobs.html`)
+**Purpose**: Browse and search interface for available job postings.
+
+**Features**:
+- Advanced search and filter form with gradient background
+- Paginated job listings with hover animations
+- Loading states for search operations
+- Responsive job cards with company and location information
+- Empty state handling for no results
+
+**Interactive Elements**:
+- Real-time search with debouncing
+- Loading spinners during search operations
+- Animated job cards with slide effects
+- Interactive pagination controls
+
+#### Login Template (`login.html`)
+**Purpose**: User authentication interface with enhanced validation.
+
+**Features**:
+- Gradient card background for visual appeal
+- Icon-enhanced form fields
+- Password visibility toggle
+- Real-time form validation with visual feedback
+- Links to registration and password recovery
+
+**Interactive Elements**:
+- Form validation with shake animations for errors
+- Password toggle with eye icon
+- Loading states for form submission
+- Visual feedback for valid/invalid fields
+
+#### Registration Template (`register.html`)
+**Purpose**: New user account creation with comprehensive validation.
+
+**Features**:
+- Multi-column layout for form fields
+- Role selection dropdown (seeker/employer)
+- Password confirmation validation
+- Terms of service agreement checkbox
+- Success and error state handling
+
+### CSS Architecture
+
+#### Methodology
+The stylesheet follows a component-based approach with:
+
+- **CSS Custom Properties**: For consistent theming and easy maintenance
+- **BEM-like Naming**: For clear component relationships
+- **Mobile-First**: Responsive design starting from mobile breakpoints
+- **Progressive Enhancement**: Base functionality with enhanced features
+
+#### Key Animations
+```css
+- fadeIn: Smooth entrance animations
+- slideInLeft: Sidebar and alert animations  
+- pulse: Attention-grabbing hover effects
+- shake: Error state feedback
+```
+
+#### Responsive Breakpoints
+```css
+- Mobile: < 576px
+- Tablet: 576px - 768px  
+- Desktop: > 768px
+```
+
+### JavaScript Functionality
+
+#### Core Features
+
+**Form Validation**:
+- Real-time field validation with visual feedback
+- Email format validation using regex patterns
+- Password strength requirements
+- Required field validation with user-friendly messages
+
+**Animation System**:
+- Intersection Observer for scroll-triggered animations
+- Counter animations for statistics display
+- Smooth scroll behavior for navigation links
+- Loading state management for user feedback
+
+**User Experience Enhancements**:
+- Auto-dismissing alert messages with slide animations
+- Password visibility toggle for better usability
+- Tooltip initialization for additional context
+- Search functionality with debounced input
+
+#### Performance Optimizations
+- Event delegation for dynamic content
+- Debounced search to reduce server requests
+- Lazy loading for animations and heavy elements
+- Minimal DOM manipulation for smooth performance
+
+### Accessibility Features
+
+#### WCAG Compliance
+- Proper heading hierarchy (h1-h6)
+- Alt text for images and icons
+- Keyboard navigation support
+- Screen reader friendly form labels
+
+#### Visual Accessibility
+- High contrast color combinations
+- Focus indicators for keyboard navigation
+- Scalable text and interface elements
+- Clear visual hierarchy and spacing
+
+#### Interactive Accessibility
+- ARIA labels for complex interactions
+- Keyboard shortcuts for common actions
+- Error messages associated with form fields
+- Loading states announced to screen readers
+
+### Browser Support
+
+#### Modern Browsers
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+#### Graceful Degradation
+- CSS Grid with flexbox fallbacks
+- JavaScript enhancement without breaking basic functionality
+- Progressive web app features where supported
+- Responsive images with appropriate fallbacks
+
+### Performance Considerations
+
+#### Loading Optimization
+- CDN-hosted Bootstrap and Font Awesome
+- Minified CSS and JavaScript in production
+- Optimized image formats and sizes
+- Lazy loading for non-critical content
+
+#### Runtime Performance  
+- Efficient CSS selectors and animations
+- Minimal JavaScript execution on page load
+- Optimized event listeners and handlers
+- Memory leak prevention in long-running pages
