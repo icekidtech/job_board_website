@@ -12,12 +12,27 @@ A simple job board website built with Python Flask, HTML, CSS, JavaScript, and M
 
 ## Features
 
-- **User Management**: Role-based authentication for job seekers and employers
+- **User Authentication**: Secure registration and login system with role-based access for job seekers and employers
+- **User Management**: Role-based authentication with session management and password security
 - **Job Postings**: Create, update, and manage job listings
 - **Application System**: Apply for jobs and track application status
 - **Database Models**: Well-structured SQLAlchemy models for users, jobs, and applications
 - **Modern UI**: Responsive design with Bootstrap 5, animations, and interactive components
 - **Enhanced UX**: Real-time form validation, loading states, and smooth animations
+
+## Authentication System
+
+The application includes a comprehensive authentication system featuring:
+- **Secure Registration**: User registration with password hashing and validation
+- **Session Management**: Flask sessions with configurable timeouts and "remember me" functionality
+- **Role-Based Access**: Differentiated access for job seekers and employers
+- **Password Security**: Werkzeug password hashing with salt generation
+- **Form Validation**: Real-time validation with comprehensive error handling
+- **Dynamic Navigation**: Context-aware navigation based on authentication status
+
+Users can register as either job seekers or employers, with the interface adapting to their role. The system includes comprehensive form validation, secure password handling, and persistent sessions.
+
+See the [detailed documentation](docs/detailed_explanation.md#authentication-system) for complete authentication specifications and security details.
 
 ## User Interface
 
@@ -35,15 +50,14 @@ See the [detailed documentation](docs/detailed_explanation.md#user-interface-des
 The application includes the following main routes:
 - **Homepage** (`/`) - Welcome page with platform overview and animated statistics
 - **Job Listings** (`/jobs`) - Browse and search job postings with advanced filtering
-- **Login** (`/login`) - User authentication with enhanced validation
-- **Registration** (`/register`) - New user account creation
+- **Authentication** (`/login`, `/register`, `/logout`) - User authentication and session management
 - **About** (`/about`) - Platform information and mission
 
 See the [detailed documentation](docs/detailed_explanation.md#routes-and-templates) for complete route specifications and template details.
 
 ## Documentation
 
-For detailed project documentation, setup instructions, database schema, UI design, and architecture details, please see:
+For detailed project documentation, setup instructions, database schema, authentication system, UI design, and architecture details, please see:
 
 📖 **[Detailed Documentation](docs/detailed_explanation.md)**
 
@@ -53,8 +67,8 @@ For detailed project documentation, setup instructions, database schema, UI desi
 job_board_website/
 ├── app/                    # Main application code
 │   ├── models.py          # Database models (User, JobPosting, Application)
-│   ├── routes.py          # Flask routes and views
-│   └── __init__.py        # App factory with database setup
+│   ├── routes.py          # Flask routes and authentication logic
+│   └── __init__.py        # App factory with database and session setup
 ├── config/                 # Configuration files
 ├── docs/                   # Detailed documentation
 ├── static/                 # CSS, JS, images
@@ -63,10 +77,11 @@ job_board_website/
 │   └── js/
 │       └── main.js        # Interactive JavaScript with validation
 ├── templates/              # HTML templates with Bootstrap 5
-│   ├── base.html          # Base template with navigation
+│   ├── base.html          # Base template with dynamic navigation
 │   ├── home.html          # Animated homepage with statistics
 │   ├── jobs.html          # Job listings with search functionality
 │   ├── login.html         # Login form with validation
+│   ├── register.html      # Registration form with role selection
 │   └── ...                # Other templates
 ├── requirements.txt        # Python dependencies
 ├── .env                    # Environment variables
@@ -77,7 +92,7 @@ job_board_website/
 ## Database Models
 
 The application uses three main models:
-- **User**: Handles both job seekers and employers with role-based access
+- **User**: Handles both job seekers and employers with role-based access and secure authentication
 - **JobPosting**: Manages job listings with detailed information
 - **Application**: Tracks job applications and their status
 

@@ -6,10 +6,11 @@
 3. [Setup Instructions](#setup-instructions)
 4. [Database Schema](#database-schema)
 5. [Database Models](#database-models)
-6. [Routes and Templates](#routes-and-templates)
-7. [API Endpoints](#api-endpoints)
-8. [Development Guidelines](#development-guidelines)
-9. [User Interface Design](#user-interface-design)
+6. [Authentication System](#authentication-system)
+7. [Routes and Templates](#routes-and-templates)
+8. [API Endpoints](#api-endpoints)
+9. [Development Guidelines](#development-guidelines)
+10. [User Interface Design](#user-interface-design)
 
 ## Project Overview
 
@@ -273,6 +274,282 @@ job = JobPosting(title='Software Developer',
 application = Application(job_id=job.id, seeker_id=seeker.id,
                          cover_letter='I am interested...')
 ```
+
+## Authentication System
+
+### Overview
+
+The Job Board website implements a comprehensive authentication system that handles user registration, login, logout, and session management. The system supports role-based access control for both job seekers and employers.
+
+### Authentication Architecture
+
+#### Core Components
+- **User Model**: Handles user data with secure password hashing
+- **Session Management**: Flask sessions for maintaining user state
+- **Role-Based Access**: Differentiated access for seekers and employers
+- **Password Security**: Werkzeug password hashing and verification
+
+#### Security Features
+- Password hashing using Werkzeug's `generate_password_hash()`
+- Secure session management with configurable timeouts
+- Input validation and sanitization
+- Protection against duplicate registrations
+- SQL injection prevention through SQLAlchemy ORM
+
+### Authentication Routes
+
+#### Registration Route (`/register`)
+**Purpose**: Handle new user account creation with comprehensive validation.
+
+**Method**: `GET`, `POST`
+
+**Features**:
+- **Form Validation**: Username, email, password, confirm password, role, terms acceptance
+- **Duplicate Prevention**: Checks for existing usernames and emails
+- **Password Requirements**: Minimum 6 characters with confirmation matching
+- **Role Selection**: Choose between 'seeker' and 'employer' roles
+- **Auto-login**: Automatically logs in user after successful registration
+- **Error Handling**: Comprehensive error messages with rollback on failure
+
+**Form Fields**:
+```html
+- username: Unique identifier for the user
+- email: User's email address (must be unique)
+- password: Minimum 6 characters
+- confirm_password: Must match password field
+- role: Either 'seeker' or 'employer'
+- terms: Checkbox for terms of service agreement
+```
+
+**Validation Rules**:
+- All fields are required
+- Email must be valid format and unique
+- Username must be unique
+- Password must be at least 6 characters
+- Passwords must match
+- Terms must be accepted
+- Role must be valid ('seeker' or 'employer')
+
+#### Login Route (`/login`)
+**Purpose**: Authenticate existing users and create sessions.
+
+**Method**: `GET`, `POST`
+
+**Features**:
+- **Email-based Authentication**: Users login with email and password
+- **Password Verification**: Secure password checking using Werkzeug
+- **Session Creation**: Stores user ID, role, and username in session
+- **Remember Me**: Optional persistent sessions for 30 days
+- **Role-based Redirects**: Different landing pages based on user role
+- **Account Status Check**: Only active users can login
+
+**Session Data Stored**:
+```python
+session['user_id'] = user.id          # Primary key for user lookup
+session['user_role'] = user.role      # 'seeker' or 'employer'
+session['username'] = user.username   # Display name
+session.permanent = True              # If "remember me" checked
+```
+
+#### Logout Route (`/logout`)
+**Purpose**: Clear user session and redirect to homepage.
+
+**Method**: `GET`
+
+**Features**:
+- **Complete Session Clearing**: Removes all session data
+- **User Feedback**: Confirmation message with username
+- **Safe Redirect**: Returns to homepage after logout
+
+### Session Management
+
+#### Configuration
+```python
+# Session configuration in app/__init__.py
+app.config['SECRET_KEY'] = 'secure-secret-key'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+```
+
+#### Session Security
+- **Secret Key**: Cryptographic signing of session cookies
+- **Configurable Lifetime**: 30-day maximum for persistent sessions
+- **Automatic Expiration**: Sessions expire based on configuration
+- **Secure Storage**: Session data stored securely on server side
+
+#### Session Utilities
+
+**Template Global Functions**:
+```python
+@main.app_template_global()
+def current_user():
+    """Get current logged-in user object"""
+    if 'user_id' in session:
+        return User.query.get(session['user_id'])
+    return None
+
+@main.app_template_global()
+def logged_in():
+    """Check if user is currently logged in"""
+    return 'user_id' in session
+```
+
+**Route Helper Functions**:
+```python
+def is_logged_in():
+    """Check if user is currently logged in"""
+    return 'user_id' in session
+
+def get_current_user():
+    """Get current logged-in user object"""
+    if is_logged_in():
+        return User.query.get(session['user_id'])
+    return None
+```
+
+### User Interface Integration
+
+#### Navigation Bar Updates
+The navigation bar dynamically changes based on authentication status:
+
+**Logged Out State**:
+- Login link
+- Register link
+
+**Logged In State**:
+- User dropdown with username and role badge
+- Profile link (placeholder)
+- Role-specific links:
+  - Employers: "Post Job"
+  - Seekers: "My Applications"
+- Logout link
+
+#### Flash Message System
+Enhanced flash messaging for authentication feedback:
+
+**Message Categories**:
+- `success`: Successful login, registration, logout
+- `error`: Authentication failures, validation errors
+- `info`: General information messages
+
+**Visual Indicators**:
+- Icons for different message types
+- Color-coded alerts (green for success, red for error)
+- Auto-dismissing alerts with animations
+
+#### Form Enhancement
+Both login and registration forms include:
+
+**Interactive Features**:
+- Real-time validation with visual feedback
+- Password visibility toggle
+- Loading states during form submission
+- Shake animations for validation errors
+
+**Accessibility Features**:
+- Proper form labels and ARIA attributes
+- Keyboard navigation support
+- Screen reader compatible error messages
+
+### Database Integration
+
+#### User Model Methods
+The User model provides essential authentication methods:
+
+```python
+def __init__(self, username, email, password, role='seeker'):
+    """Initialize user with hashed password"""
+    self.password = generate_password_hash(password)
+
+def check_password(self, password):
+    """Verify password against stored hash"""
+    return check_password_hash(self.password, password)
+
+def set_password(self, password):
+    """Update user password with new hash"""
+    self.password = generate_password_hash(password)
+```
+
+#### User Registration Flow
+1. **Form Submission**: User submits registration form
+2. **Validation**: Server validates all form fields
+3. **Duplicate Check**: Verify username and email uniqueness
+4. **Password Hashing**: Secure password storage using Werkzeug
+5. **Database Insert**: Create new user record
+6. **Auto-login**: Establish session for new user
+7. **Redirect**: Send to appropriate landing page
+
+#### Login Verification Flow
+1. **Form Submission**: User submits login credentials
+2. **User Lookup**: Find user by email address
+3. **Status Check**: Verify account is active
+4. **Password Verification**: Check hashed password
+5. **Session Creation**: Store user data in session
+6. **Role-based Redirect**: Send to appropriate dashboard
+
+### Security Considerations
+
+#### Password Security
+- **Hashing Algorithm**: Werkzeug's secure password hashing
+- **Salt Generation**: Automatic salt generation for each password
+- **No Plain Text**: Passwords never stored in plain text
+- **Verification**: Secure password checking without exposure
+
+#### Session Security
+- **Signed Cookies**: Cryptographically signed session cookies
+- **Server-side Storage**: Session data stored on server
+- **Automatic Expiration**: Configurable session timeouts
+- **Secure Logout**: Complete session clearing on logout
+
+#### Input Validation
+- **Server-side Validation**: All inputs validated on server
+- **SQL Injection Prevention**: SQLAlchemy ORM parameterized queries
+- **XSS Prevention**: Template escaping in Jinja2
+- **CSRF Protection**: Flask's built-in CSRF protection ready
+
+#### Data Protection
+- **Email Uniqueness**: Prevents account enumeration
+- **Username Uniqueness**: Ensures unique user identification
+- **Role Validation**: Restricted role assignment
+- **Active Status**: Account deactivation capability
+
+### Future Enhancements
+
+#### Planned Authentication Features
+- **Email Verification**: Confirm email addresses during registration
+- **Password Reset**: Secure password recovery via email
+- **Two-Factor Authentication**: Optional 2FA for enhanced security
+- **OAuth Integration**: Login with Google, GitHub, LinkedIn
+- **Account Management**: User profile editing and password changes
+- **Admin Authentication**: Separate admin user management
+
+#### Security Improvements
+- **Rate Limiting**: Prevent brute force attacks
+- **Account Lockout**: Temporary lockout after failed attempts
+- **Session Monitoring**: Track and log authentication events
+- **Password Strength**: Enhanced password requirements
+- **HTTPS Enforcement**: Secure protocol requirements
+
+### Testing Authentication
+
+#### Manual Testing Steps
+1. **Registration**: Create accounts with different roles
+2. **Validation**: Test form validation with invalid inputs
+3. **Login**: Verify correct and incorrect credentials
+4. **Session**: Check session persistence and expiration
+5. **Navigation**: Test navigation bar state changes
+6. **Logout**: Confirm complete session clearing
+
+#### Error Scenarios to Test
+- Duplicate username registration
+- Duplicate email registration
+- Password mismatch during registration
+- Invalid email format
+- Short password length
+- Missing required fields
+- Inactive user login attempt
+- Invalid credentials
+
+The authentication system provides a solid foundation for user management while maintaining security best practices and user experience standards.
 
 ## Routes and Templates
 

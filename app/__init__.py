@@ -3,6 +3,7 @@ from mysql.connector import Error
 import sys
 import os
 from flask import Flask
+from datetime import timedelta
 
 # Add the project root to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -51,7 +52,10 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = DatabaseConfig.SQLALCHEMY_DATABASE_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = DatabaseConfig.SQLALCHEMY_TRACK_MODIFICATIONS
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = DatabaseConfig.SQLALCHEMY_ENGINE_OPTIONS
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+    
+    # Session configuration
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Remember me duration
     
     # Initialize database with app
     db.init_app(app)
