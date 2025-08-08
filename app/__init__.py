@@ -50,6 +50,10 @@ def create_app():
     # Initialize database with app
     db.init_app(app)
     
+    # Register blueprints
+    from app.routes import main
+    app.register_blueprint(main)
+    
     # Test database connection on app creation
     print("Testing database connection...")
     if test_database_connection():
