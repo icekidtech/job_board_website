@@ -2,11 +2,13 @@ import mysql.connector
 from mysql.connector import Error
 import sys
 import os
+from flask import Flask
 
 # Add the project root to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config.db_config import DB_CONFIG, DatabaseConfig
+from app.models import db, create_tables
 
 def test_database_connection():
     """Test the database connection"""
@@ -37,14 +39,25 @@ def test_database_connection():
 
 def create_app():
     """Factory function to create Flask app"""
-    from flask import Flask
-    
     app = Flask(__name__)
+    
+    # Configure SQLAlchemy
+    app.config['SQLALCHEMY_DATABASE_URI'] = DatabaseConfig.SQLALCHEMY_DATABASE_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = DatabaseConfig.SQLALCHEMY_TRACK_MODIFICATIONS
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = DatabaseConfig.SQLALCHEMY_ENGINE_OPTIONS
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+    
+    # Initialize database with app
+    db.init_app(app)
     
     # Test database connection on app creation
     print("Testing database connection...")
     if test_database_connection():
         print("Database setup is ready!")
+        
+        # Create tables if they don't exist
+        create_tables(app)
+        
     else:
         print("Database connection failed. Please check your configuration.")
     
