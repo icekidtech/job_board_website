@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
-        <div class="card shadow-lg border-0 rounded-3">
+        <div class="card shadow-lg border-0 rounded-3 post-job-card">
             <div class="card-header bg-gradient-primary text-white text-center py-4">
                 <h2 class="card-title mb-0">
                     <i class="fas fa-plus-circle me-2"></i>Post a New Job
@@ -14,7 +14,7 @@
             </div>
             
             <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('main.post_job') }}" id="postJobForm">
+                <form method="POST" action="{{ url_for('main.post_job') }}" id="postJobForm" class="post-job-form">
                     <!-- Job Title -->
                     <div class="mb-3">
                         <label for="title" class="form-label">
@@ -129,35 +129,4 @@
         </div>
     </div>
 </div>
-
-<style>
-    .bg-gradient-primary {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    }
-    
-    .form-control:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-    
-    .btn-primary {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-        border: none;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-    }
-    
-    .card {
-        transition: all 0.3s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-    }
-</style>
 {% endblock %}

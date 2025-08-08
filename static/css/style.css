@@ -212,6 +212,7 @@ body {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    border-left: 4px solid transparent;
 }
 
 .job-card::before {
@@ -231,8 +232,9 @@ body {
 }
 
 .job-card:hover {
-    transform: translateX(10px);
-    box-shadow: var(--box-shadow-hover);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    border-left-color: #007bff;
 }
 
 .job-detail-btn {
@@ -312,6 +314,7 @@ body {
     font-weight: 500;
     padding: 0.5em 0.8em;
     border-radius: 20px;
+    font-size: 0.75rem;
 }
 
 /* Footer styles */
@@ -446,4 +449,69 @@ footer {
 
 .loading * {
     cursor: wait !important;
+}
+
+/* ========================================
+   JOB LISTINGS PAGE SPECIFIC STYLES
+======================================== */
+
+/* Search section gradients */
+.bg-gradient-light {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+/* Button group styles for job cards */
+.btn-group .btn {
+    border-radius: 0.375rem;
+    margin-right: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+/* Modal header gradients */
+.modal-header.bg-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.modal-header.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+}
+
+/* ========================================
+   POST JOB PAGE SPECIFIC STYLES
+======================================== */
+
+/* Post job form header gradient */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+/* Post job form focus states */
+.post-job-form .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Post job button hover effects */
+.post-job-form .btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.post-job-form .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Post job card hover effects */
+.post-job-card {
+    transition: all 0.3s ease;
+}
+
+.post-job-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
 }
