@@ -5,8 +5,9 @@
 2. [Architecture](#architecture)
 3. [Setup Instructions](#setup-instructions)
 4. [Database Schema](#database-schema)
-5. [API Endpoints](#api-endpoints)
-6. [Development Guidelines](#development-guidelines)
+5. [Database Models](#database-models)
+6. [API Endpoints](#api-endpoints)
+7. [Development Guidelines](#development-guidelines)
 
 ## Project Overview
 
@@ -16,7 +17,7 @@ This job board website allows employers to post job listings and job seekers to 
 ### Technology Stack
 - **Backend**: Python Flask
 - **Frontend**: HTML, CSS, JavaScript
-- **Database**: MySQL
+- **Database**: MySQL with SQLAlchemy ORM
 - **Environment**: Python virtual environment
 
 ### Key Features (Planned)
@@ -33,7 +34,7 @@ This job board website allows employers to post job listings and job seekers to 
 job_board_website/
 ├── app/                    # Main application package
 │   ├── __init__.py        # App factory and DB connection test
-│   ├── models/            # Database models
+│   ├── models.py          # SQLAlchemy database models
 │   ├── routes/            # URL routes and views
 │   └── utils/             # Utility functions
 ├── config/                # Configuration files
@@ -117,38 +118,144 @@ flask run
 
 ## Database Schema
 
-### Planned Tables
+### Database Tables Overview
 
-#### Users Table
-- `id` (Primary Key)
-- `username` (Unique)
-- `email` (Unique)
-- `password_hash`
-- `user_type` (employer/job_seeker)
-- `created_at`
-- `updated_at`
+The job board application uses three main tables to manage users, job postings, and applications:
 
-#### Jobs Table
-- `id` (Primary Key)
-- `title`
-- `description`
-- `company_name`
-- `location`
-- `salary_range`
-- `job_type` (full-time/part-time/contract)
-- `posted_by` (Foreign Key to Users)
-- `created_at`
-- `updated_at`
-- `is_active`
+1. **users** - Stores user accounts for both job seekers and employers
+2. **job_postings** - Contains job listings created by employers
+3. **applications** - Tracks job applications submitted by seekers
 
-#### Applications Table
-- `id` (Primary Key)
-- `job_id` (Foreign Key to Jobs)
-- `user_id` (Foreign Key to Users)
-- `cover_letter`
-- `resume_path`
-- `status` (pending/reviewed/accepted/rejected)
-- `applied_at`
+### Entity Relationship Diagram
+
+```
+users (1) ----< job_postings (1) ----< applications (n)
+  |                                         ^
+  |                                         |
+  +----------- seeker_id ------------------+
+```
+
+## Database Models
+
+### User Model (`users` table)
+
+The User model handles both job seekers and employers with role-based differentiation.
+
+**Fields:**
+- `id` (Integer, Primary Key) - Unique user identifier
+- `username` (String(80), Unique, Required) - User's display name
+- `email` (String(120), Unique, Required) - User's email address
+- `password` (String(255), Required) - Hashed password for security
+- `role` (Enum: 'seeker'/'employer', Required) - User type with default 'seeker'
+- `created_at` (DateTime, Required) - Account creation timestamp
+- `updated_at` (DateTime, Required) - Last profile update timestamp
+- `is_active` (Boolean, Required) - Account status flag
+
+**Relationships:**
+- One-to-many with JobPosting (as employer)
+- One-to-many with Application (as seeker)
+
+**Key Features:**
+- Password hashing using Werkzeug security functions
+- Role-based access control
+- Automatic timestamp management
+- Data serialization methods
+
+### JobPosting Model (`job_postings` table)
+
+The JobPosting model represents job listings created by employers.
+
+**Fields:**
+- `id` (Integer, Primary Key) - Unique job posting identifier
+- `title` (String(200), Required) - Job position title
+- `description` (Text, Required) - Detailed job description
+- `company_name` (String(100), Optional) - Company/organization name
+- `location` (String(100), Optional) - Job location
+- `salary_range` (String(50), Optional) - Salary information
+- `job_type` (Enum: 'full-time'/'part-time'/'contract'/'internship') - Employment type
+- `employer_id` (Integer, Foreign Key to users.id, Required) - Job poster reference
+- `posted_date` (DateTime, Required) - Job posting creation timestamp
+- `updated_at` (DateTime, Required) - Last job update timestamp
+- `is_active` (Boolean, Required) - Job posting status
+- `deadline` (DateTime, Optional) - Application deadline
+
+**Relationships:**
+- Many-to-one with User (employer)
+- One-to-many with Application
+
+**Key Features:**
+- Flexible job type categorization
+- Deadline tracking with expiration checks
+- Cascade deletion of related applications
+- Employer information integration
+
+### Application Model (`applications` table)
+
+The Application model tracks job applications submitted by seekers.
+
+**Fields:**
+- `id` (Integer, Primary Key) - Unique application identifier
+- `job_id` (Integer, Foreign Key to job_postings.id, Required) - Applied job reference
+- `seeker_id` (Integer, Foreign Key to users.id, Required) - Applicant reference
+- `application_date` (DateTime, Required) - Application submission timestamp
+- `cover_letter` (Text, Optional) - Applicant's cover letter
+- `resume_path` (String(255), Optional) - Path to uploaded resume file
+- `status` (Enum: 'pending'/'reviewed'/'accepted'/'rejected') - Application status
+- `notes` (Text, Optional) - Employer notes about the application
+- `updated_at` (DateTime, Required) - Last status update timestamp
+
+**Relationships:**
+- Many-to-one with JobPosting
+- Many-to-one with User (seeker)
+
+**Key Features:**
+- Unique constraint preventing duplicate applications per job/seeker
+- Status tracking with update methods
+- File upload support for resumes
+- Employer note system
+
+### Model Relationships Summary
+
+```python
+# User relationships
+user.job_postings  # Jobs posted by this employer
+user.applications  # Applications submitted by this seeker
+
+# JobPosting relationships
+job.employer      # User who posted this job
+job.applications  # All applications for this job
+
+# Application relationships
+application.job_posting  # The job being applied for
+application.seeker      # The user who applied
+```
+
+### Database Operations
+
+**Creating Tables:**
+```python
+from app.models import create_tables
+create_tables(app)  # Creates all tables if they don't exist
+```
+
+**Example Usage:**
+```python
+# Create a new employer
+employer = User(username='techcorp', email='hr@techcorp.com', 
+                password='secure123', role='employer')
+
+# Create a job posting
+job = JobPosting(title='Software Developer', 
+                description='Python developer needed...',
+                employer_id=employer.id,
+                company_name='TechCorp Inc.',
+                location='Remote',
+                job_type='full-time')
+
+# Create an application
+application = Application(job_id=job.id, seeker_id=seeker.id,
+                         cover_letter='I am interested...')
+```
 
 ## API Endpoints
 
@@ -199,7 +306,7 @@ flask run
 ## Next Steps
 
 1. ✅ Database setup and connection
-2. 🔄 Create database models
+2. ✅ Create database models
 3. 🔄 Implement user authentication
 4. 🔄 Build job listing functionality
 5. 🔄 Create application system
