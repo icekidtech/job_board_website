@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Job Listings - Job Board{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">Job Listings</h1>
+            <a href="#" class="btn btn-primary">Post a Job</a>
+        </div>
+        
+        <!-- Search and Filter Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('main.jobs') }}">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <input type="text" class="form-control" name="search" placeholder="Search jobs..." 
+                                   value="{{ request.args.get('search', '') }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <select class="form-control" name="location">
+                                <option value="">All Locations</option>
+                                <option value="remote">Remote</option>
+                                <option value="onsite">On-site</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <select class="form-control" name="job_type">
+                                <option value="">All Types</option>
+                                <option value="full-time">Full-time</option>
+                                <option value="part-time">Part-time</option>
+                                <option value="contract">Contract</option>
+                                <option value="internship">Internship</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <button type="submit" class="btn btn-outline-primary w-100">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Job Listings -->
+        {% if jobs.items %}
+            {% for job in jobs.items %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="card-title mb-2">{{ job.title }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                {{ job.company_name or job.employer.username }}
+                                {% if job.location %}
+                                    • {{ job.location }}
+                                {% endif %}
+                            </h6>
+                            <p class="card-text">
+                                {{ job.description[:150] }}...
+                            </p>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-primary">{{ job.job_type.title() }}</span>
+                                {% if job.salary_range %}
+                                    <span class="badge bg-success">{{ job.salary_range }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <small class="text-muted d-block mb-2">
+                                Posted {{ job.posted_date.strftime('%B %d, %Y') }}
+                            </small>
+                            <a href="#" class="btn btn-outline-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- Pagination -->
+            {% if jobs.pages > 1 %}
+            <nav aria-label="Job listings pagination">
+                <ul class="pagination justify-content-center">
+                    {% if jobs.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('main.jobs', page=jobs.prev_num) }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in jobs.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != jobs.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.jobs', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if jobs.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('main.jobs', page=jobs.next_num) }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
+        {% else %}
+            <!-- No Jobs Found -->
+            <div class="text-center py-5">
+                <h4 class="text-muted">No job listings found</h4>
+                <p class="text-muted">Be the first to post a job opportunity!</p>
+                <a href="#" class="btn btn-primary">Post a Job</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
