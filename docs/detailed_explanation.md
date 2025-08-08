@@ -6,8 +6,9 @@
 3. [Setup Instructions](#setup-instructions)
 4. [Database Schema](#database-schema)
 5. [Database Models](#database-models)
-6. [API Endpoints](#api-endpoints)
-7. [Development Guidelines](#development-guidelines)
+6. [Routes and Templates](#routes-and-templates)
+7. [API Endpoints](#api-endpoints)
+8. [Development Guidelines](#development-guidelines)
 
 ## Project Overview
 
@@ -16,7 +17,7 @@ This job board website allows employers to post job listings and job seekers to 
 
 ### Technology Stack
 - **Backend**: Python Flask
-- **Frontend**: HTML, CSS, JavaScript
+- **Frontend**: HTML, CSS, JavaScript, Bootstrap 5
 - **Database**: MySQL with SQLAlchemy ORM
 - **Environment**: Python virtual environment
 
@@ -35,7 +36,7 @@ job_board_website/
 ├── app/                    # Main application package
 │   ├── __init__.py        # App factory and DB connection test
 │   ├── models.py          # SQLAlchemy database models
-│   ├── routes/            # URL routes and views
+│   ├── routes.py          # Flask routes and views
 │   └── utils/             # Utility functions
 ├── config/                # Configuration files
 │   └── db_config.py       # Database configuration
@@ -43,12 +44,24 @@ job_board_website/
 │   └── detailed_explanation.md
 ├── static/                # Static files (CSS, JS, images)
 │   ├── css/
+│   │   └── style.css      # Custom styles
 │   ├── js/
+│   │   └── main.js        # JavaScript functionality
 │   └── images/
 ├── templates/             # Jinja2 HTML templates
+│   ├── base.html          # Base template with navigation
+│   ├── home.html          # Homepage template
+│   ├── jobs.html          # Job listings template
+│   ├── login.html         # Login form template
+│   ├── register.html      # Registration form template
+│   ├── about.html         # About page template
+│   └── errors/            # Error page templates
+│       ├── 404.html
+│       └── 500.html
 ├── requirements.txt       # Python dependencies
 ├── .env                   # Environment variables (not in git)
 ├── .gitignore            # Git ignore rules
+├── run.py                # Application runner script
 └── readme.md             # Brief project overview
 ```
 
@@ -113,6 +126,9 @@ python app/__init__.py
 ### 5. Run the Application
 ```bash
 # Start the Flask development server
+python run.py
+
+# Alternative: using Flask CLI
 flask run
 ```
 
@@ -257,6 +273,123 @@ application = Application(job_id=job.id, seeker_id=seeker.id,
                          cover_letter='I am interested...')
 ```
 
+## Routes and Templates
+
+### Route Structure
+
+The application uses Flask blueprints to organize routes in [`app/routes.py`](app/routes.py). All routes are registered under the 'main' blueprint.
+
+### Main Routes
+
+#### Homepage Route (`/`)
+- **Purpose**: Landing page with overview and statistics
+- **Template**: [`templates/home.html`](templates/home.html)
+- **Features**:
+  - Displays total number of active jobs and users
+  - Welcome message and platform overview
+  - Feature highlights and call-to-action buttons
+  - Responsive design with Bootstrap components
+
+#### Job Listings Route (`/jobs`)
+- **Purpose**: Browse and search available job postings
+- **Template**: [`templates/jobs.html`](templates/jobs.html)
+- **Features**:
+  - Paginated job listings (10 per page)
+  - Search and filter functionality
+  - Job cards with key information (title, company, location, type)
+  - Responsive grid layout
+  - "No results" state handling
+
+#### Login Route (`/login`)
+- **Purpose**: User authentication form
+- **Template**: [`templates/login.html`](templates/login.html)
+- **Features**:
+  - Email and password input fields
+  - "Remember me" checkbox
+  - Links to registration and password recovery
+  - Form validation and error handling
+
+#### Registration Route (`/register`)
+- **Purpose**: New user account creation
+- **Template**: [`templates/register.html`](templates/register.html)
+- **Features**:
+  - Username, email, and password fields
+  - Role selection (job seeker or employer)
+  - Password confirmation
+  - Terms of service agreement
+
+#### About Route (`/about`)
+- **Purpose**: Information about the platform
+- **Template**: [`templates/about.html`](templates/about.html)
+- **Features**:
+  - Mission statement and platform overview
+  - How-it-works explanation
+  - Call-to-action buttons
+
+### Template Architecture
+
+#### Base Template ([`templates/base.html`](templates/base.html))
+- **Purpose**: Common layout and structure for all pages
+- **Features**:
+  - Responsive navigation bar with brand and menu items
+  - Flash message display system
+  - Bootstrap 5 integration
+  - Footer with copyright information
+  - JavaScript and CSS includes
+
+#### Template Inheritance
+All page templates extend the base template using Jinja2 inheritance:
+
+```html
+{% extends "base.html" %}
+{% block title %}Page Title{% endblock %}
+{% block content %}
+<!-- Page-specific content -->
+{% endblock %}
+```
+
+### Error Handling
+
+#### 404 Not Found ([`templates/errors/404.html`](templates/errors/404.html))
+- Custom 404 error page with helpful navigation
+- User-friendly message and link to homepage
+
+#### 500 Internal Server Error ([`templates/errors/500.html`](templates/errors/500.html))
+- Custom 500 error page for server errors
+- Database session rollback on errors
+- Graceful error recovery
+
+### Static Assets
+
+#### CSS Styling ([`static/css/style.css`](static/css/style.css))
+- Custom styles complementing Bootstrap
+- Responsive design enhancements
+- Card hover effects and transitions
+- Form styling and validation states
+
+#### JavaScript Functionality ([`static/js/main.js`](static/js/main.js))
+- Auto-hiding alert messages
+- Smooth scrolling for anchor links
+- Form validation enhancements
+- Utility functions for dynamic content
+
+### Navigation Structure
+
+The main navigation includes:
+- **Home** - Landing page
+- **Jobs** - Job listings with search
+- **About** - Platform information
+- **Login** - User authentication
+- **Register** - Account creation
+
+### Responsive Design
+
+All templates use Bootstrap 5 for responsive design:
+- Mobile-first approach
+- Flexible grid system
+- Responsive navigation with collapsible menu
+- Touch-friendly buttons and forms
+
 ## API Endpoints
 
 ### Planned Endpoints
@@ -307,10 +440,10 @@ application = Application(job_id=job.id, seeker_id=seeker.id,
 
 1. ✅ Database setup and connection
 2. ✅ Create database models
-3. 🔄 Implement user authentication
-4. 🔄 Build job listing functionality
-5. 🔄 Create application system
-6. 🔄 Design user interface
+3. ✅ Basic routes and templates
+4. 🔄 Implement user authentication
+5. 🔄 Build job listing functionality
+6. 🔄 Create application system
 7. 🔄 Add search and filtering
 8. 🔄 Implement admin features
 
