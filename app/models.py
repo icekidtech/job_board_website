@@ -56,7 +56,8 @@ class User(db.Model):
             'bio': self.bio,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'role_display': 'Job Seeker' if self.role == 'seeker' else 'Employer' if self.role == 'employer' else 'Administrator'
         }
     
     def update_profile(self, username=None, email=None, new_password=None, 
@@ -73,13 +74,13 @@ class User(db.Model):
             
             # Update profile fields
             if full_name is not None:
-                self.full_name = full_name
+                self.full_name = full_name if full_name.strip() else None
             if phone is not None:
-                self.phone = phone
+                self.phone = phone if phone.strip() else None
             if location is not None:
-                self.location = location
+                self.location = location if location.strip() else None
             if bio is not None:
-                self.bio = bio
+                self.bio = bio if bio.strip() else None
             
             # Update timestamp
             self.updated_at = datetime.utcnow()
@@ -92,6 +93,15 @@ class User(db.Model):
             db.session.rollback()
             print(f"Error updating profile: {e}")
             return False
+    
+    def get_profile_completion_percentage(self):
+        """Calculate profile completion percentage"""
+        fields = [
+            self.username, self.email, self.full_name, 
+            self.phone, self.location, self.bio
+        ]
+        completed_fields = sum(1 for field in fields if field and field.strip())
+        return int((completed_fields / len(fields)) * 100)
     
     def to_dict(self):
         """Convert user object to dictionary (excluding password)"""
@@ -433,11 +443,11 @@ def create_tables(app):
     """Create all database tables"""
     with app.app_context():
         db.create_all()
-        print("✅ Database tables created successfully")
+        print("All database tables created successfully!")
 
 # Helper function to drop all tables (for development/testing)
 def drop_tables(app):
     """Drop all database tables"""
     with app.app_context():
         db.drop_all()
-        print("✅ Database tables dropped successfully")
+        print("All database tables dropped!")

@@ -1,68 +1,33 @@
-import mysql.connector
-from mysql.connector import Error
-import sys
-import os
+"""
+Flask application factory and configuration
+"""
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from datetime import timedelta
+import os
 
-# Add the project root to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Initialize extensions
+db = SQLAlchemy()
 
-from config.db_config import DB_CONFIG, DatabaseConfig
-from app.models import db, create_tables
-
-def test_database_connection():
-    """Test the database connection"""
-    connection = None
-    try:
-        # Using dictionary config
-        connection = mysql.connector.connect(**DB_CONFIG)
-        
-        if connection.is_connected():
-            db_info = connection.get_server_info()
-            print(f"✅ Successfully connected to MySQL Server version {db_info}")
-            
-            cursor = connection.cursor()
-            cursor.execute("SELECT DATABASE();")
-            database_name = cursor.fetchone()
-            print(f"✅ Connected to database: {database_name[0]}")
-            
-            return True
-            
-    except Error as e:
-        print(f"❌ Error while connecting to MySQL: {e}")
-        return False
-        
-    finally:
-        if connection and connection.is_connected():
-            connection.close()
-            print("🔌 MySQL connection is closed")
-
-def create_app():
-    """Factory function to create Flask app"""
-    # Get the project root directory (one level up from app/)
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+def create_app(config_name=None):
+    """Application factory pattern"""
+    app = Flask(__name__)
     
-    # Create Flask app with correct template and static folder paths
-    app = Flask(__name__, 
-                template_folder=os.path.join(project_root, 'templates'),
-                static_folder=os.path.join(project_root, 'static'))
+    # Load configuration
+    if config_name is None:
+        config_name = os.environ.get('FLASK_ENV', 'development')
     
-    # Configure SQLAlchemy
-    app.config['SQLALCHEMY_DATABASE_URI'] = DatabaseConfig.SQLALCHEMY_DATABASE_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = DatabaseConfig.SQLALCHEMY_TRACK_MODIFICATIONS
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = DatabaseConfig.SQLALCHEMY_ENGINE_OPTIONS
+    from config.db_config import config, DatabaseConfig
+    app.config.from_object(config[config_name])
     
-    # Session configuration
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Remember me duration
+    # Ensure database directory exists
+    DatabaseConfig.create_database_directory()
     
-    # Initialize database with app
+    # Initialize extensions
     db.init_app(app)
     
-    # Register blueprints
-    from app.routes import main
-    app.register_blueprint(main)
+    # Session configuration
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
     
     # Add custom Jinja2 filter for line breaks
     @app.template_filter('nl2br')
@@ -72,19 +37,48 @@ def create_app():
             return text.replace('\n', '<br>')
         return text
     
-    # Test database connection on app creation
-    print("Testing database connection...")
-    if test_database_connection():
-        print("Database setup is ready!")
-        
-        # Create tables if they don't exist
-        create_tables(app)
-        
-    else:
-        print("Database connection failed. Please check your configuration.")
+    # Register blueprints
+    from app.routes import main
+    app.register_blueprint(main)
+    
+    # Create database tables
+    with app.app_context():
+        from app.models import User, JobPosting, Application
+        db.create_all()
+        print("Database tables created successfully with SQLite3!")
     
     return app
 
-if __name__ == "__main__":
-    # Run database connection test
+def test_database_connection():
+    """Test SQLite database connection and setup"""
+    try:
+        from config.db_config import DatabaseConfig
+        
+        # Check if we can create the database directory
+        DatabaseConfig.create_database_directory()
+        
+        # Create a test app to check database connection
+        app = create_app('testing')
+        
+        with app.app_context():
+            from app.models import db, User
+            
+            # Test database operations
+            db.create_all()
+            
+            # Try to query (this will create the database file if it doesn't exist)
+            user_count = User.query.count()
+            
+            print("✅ SQLite3 database connection successful!")
+            print(f"📊 Current user count: {user_count}")
+            print(f"📁 Database location: {DatabaseConfig.get_database_path()}")
+            
+            return True
+            
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        return False
+
+if __name__ == '__main__':
+    """Test database connection when run directly"""
     test_database_connection()

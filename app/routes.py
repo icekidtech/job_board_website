@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from app.models import db, User, JobPosting, Application
 from werkzeug.security import check_password_hash
+from datetime import datetime
 
 # Create a blueprint for main routes
 main = Blueprint('main', __name__)
@@ -390,9 +391,30 @@ def profile():
         # Get additional profile data
         profile_data = current_user.get_profile_data()
         
+        # Calculate profile statistics
+        if current_user.role == 'seeker':
+            applied_jobs_count = len(current_user.get_applied_jobs())
+            profile_stats = {
+                'applications_submitted': applied_jobs_count,
+                'account_age_days': (datetime.utcnow() - current_user.created_at).days
+            }
+        elif current_user.role == 'employer':
+            posted_jobs = current_user.get_posted_jobs()
+            total_applications = sum(job.get('application_count', 0) for job in posted_jobs)
+            profile_stats = {
+                'jobs_posted': len(posted_jobs),
+                'total_applications_received': total_applications,
+                'account_age_days': (datetime.utcnow() - current_user.created_at).days
+            }
+        else:
+            profile_stats = {
+                'account_age_days': (datetime.utcnow() - current_user.created_at).days
+            }
+        
         return render_template('profile.html', 
                              user=current_user,
-                             profile_data=profile_data)
+                             profile_data=profile_data,
+                             profile_stats=profile_stats)
                              
     except Exception as e:
         flash('Error loading profile data. Please try again.', 'error')
@@ -419,6 +441,10 @@ def edit_profile():
         current_password = request.form.get('current_password', '').strip()
         new_password = request.form.get('new_password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        phone = request.form.get('phone', '').strip()
+        location = request.form.get('location', '').strip()
+        bio = request.form.get('bio', '').strip()
         
         # Basic validation
         if not new_username:
@@ -481,12 +507,16 @@ def edit_profile():
             update_success = current_user.update_profile(
                 username=new_username,
                 email=new_email,
-                new_password=new_password if new_password else None
+                new_password=new_password if new_password else None,
+                full_name=full_name if full_name else None,
+                phone=phone if phone else None,
+                location=location if location else None,
+                bio=bio if bio else None
             )
             
             if update_success:
                 # Update session data if username changed
-                if new_username != current_user.username:
+                if new_username != session.get('username'):
                     session['username'] = new_username
                 
                 flash('Profile updated successfully!', 'success')
