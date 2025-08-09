@@ -117,3 +117,11 @@ Copy `.env.example` to `.env` and update the configuration values according to y
 ## Contributing
 
 Please refer to the [detailed documentation](docs/detailed_explanation.md) for development guidelines and project structure information.
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## Support
+
+For questions or issues, please check the [detailed documentation](docs/detailed_explanation.md) or open an issue in the project repository.
