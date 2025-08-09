@@ -51,6 +51,168 @@ class User(db.Model):
     
     def __repr__(self):
         return f'<User {self.username}>'
+    
+    def get_applied_jobs(self):
+        """Get all jobs this seeker has applied for (placeholder data)"""
+        if self.role != 'seeker':
+            return []
+        
+        # Placeholder data - replace with actual database queries later
+        from datetime import datetime, timedelta
+        placeholder_applications = [
+            {
+                'job_title': 'Senior Python Developer',
+                'company_name': 'TechCorp Inc.',
+                'job_type': 'Full-time',
+                'application_date': datetime.now() - timedelta(days=5),
+                'status': 'pending'
+            },
+            {
+                'job_title': 'Frontend Developer',
+                'company_name': 'WebSolutions Ltd.',
+                'job_type': 'Contract',
+                'application_date': datetime.now() - timedelta(days=12),
+                'status': 'reviewed'
+            },
+            {
+                'job_title': 'Data Analyst',
+                'company_name': 'DataFlow Corp.',
+                'job_type': 'Full-time',
+                'application_date': datetime.now() - timedelta(days=18),
+                'status': 'rejected'
+            }
+        ]
+        return placeholder_applications
+    
+    def get_posted_jobs(self):
+        """Get all jobs posted by this employer (placeholder data)"""
+        if self.role != 'employer':
+            return []
+        
+        # Placeholder data - replace with actual database queries later
+        from datetime import datetime, timedelta
+        placeholder_jobs = [
+            {
+                'title': 'Python Developer',
+                'job_type': 'Full-time',
+                'location': 'Remote',
+                'posted_date': datetime.now() - timedelta(days=7),
+                'is_active': True,
+                'application_count': 15,
+                'view_count': 120
+            },
+            {
+                'title': 'UI/UX Designer',
+                'job_type': 'Part-time',
+                'location': 'New York',
+                'posted_date': datetime.now() - timedelta(days=14),
+                'is_active': True,
+                'application_count': 8,
+                'view_count': 85
+            },
+            {
+                'title': 'Project Manager',
+                'job_type': 'Full-time',
+                'location': 'San Francisco',
+                'posted_date': datetime.now() - timedelta(days=21),
+                'is_active': False,
+                'application_count': 22,
+                'view_count': 200
+            }
+        ]
+        return placeholder_jobs
+    
+    def get_recent_applications(self):
+        """Get recent applications for this employer's jobs (placeholder data)"""
+        if self.role != 'employer':
+            return []
+        
+        # Placeholder data - replace with actual database queries later
+        from datetime import datetime, timedelta
+        placeholder_applications = [
+            {
+                'applicant_name': 'John Smith',
+                'applicant_email': 'john.smith@email.com',
+                'job_title': 'Python Developer',
+                'application_date': datetime.now() - timedelta(days=1),
+                'status': 'pending'
+            },
+            {
+                'applicant_name': 'Sarah Johnson',
+                'applicant_email': 'sarah.j@email.com',
+                'job_title': 'UI/UX Designer',
+                'application_date': datetime.now() - timedelta(days=3),
+                'status': 'reviewed'
+            },
+            {
+                'applicant_name': 'Mike Wilson',
+                'applicant_email': 'mike.wilson@email.com',
+                'job_title': 'Python Developer',
+                'application_date': datetime.now() - timedelta(days=5),
+                'status': 'accepted'
+            }
+        ]
+        return placeholder_applications
+    
+    @staticmethod
+    def get_system_overview():
+        """Get system overview statistics for admin dashboard (placeholder data)"""
+        from datetime import datetime, timedelta
+        
+        # Placeholder data - replace with actual database queries later
+        return {
+            'total_users': 1247,
+            'total_jobs': 89,
+            'total_applications': 432,
+            'total_employers': 156,
+            'active_employers': 98,
+            'new_users_this_month': 78,
+            'new_jobs_this_month': 23,
+            'new_applications_this_month': 145,
+            'applications_today': 12,
+            'jobs_posted_today': 3,
+            'new_users_today': 5,
+            'recent_users': [
+                {
+                    'username': 'tech_recruiter',
+                    'role': 'employer',
+                    'created_at': datetime.now() - timedelta(days=1),
+                    'is_active': True
+                },
+                {
+                    'username': 'job_seeker_123',
+                    'role': 'seeker',
+                    'created_at': datetime.now() - timedelta(days=2),
+                    'is_active': True
+                },
+                {
+                    'username': 'dev_company',
+                    'role': 'employer',
+                    'created_at': datetime.now() - timedelta(days=3),
+                    'is_active': True
+                }
+            ],
+            'recent_jobs': [
+                {
+                    'title': 'Senior Software Engineer',
+                    'company_name': 'TechCorp',
+                    'posted_date': datetime.now() - timedelta(days=1),
+                    'application_count': 8
+                },
+                {
+                    'title': 'Marketing Manager',
+                    'company_name': 'MarketPro',
+                    'posted_date': datetime.now() - timedelta(days=2),
+                    'application_count': 5
+                },
+                {
+                    'title': 'Data Scientist',
+                    'company_name': 'DataFlow',
+                    'posted_date': datetime.now() - timedelta(days=3),
+                    'application_count': 12
+                }
+            ]
+        }
 
 
 class JobPosting(db.Model):
