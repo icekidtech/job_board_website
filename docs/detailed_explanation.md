@@ -8,9 +8,10 @@
 5. [Database Models](#database-models)
 6. [Authentication System](#authentication-system)
 7. [Routes and Templates](#routes-and-templates)
-8. [API Endpoints](#api-endpoints)
-9. [Development Guidelines](#development-guidelines)
-10. [User Interface Design](#user-interface-design)
+8. [Dashboard Features](#dashboard-features)
+9. [API Endpoints](#api-endpoints)
+10. [Development Guidelines](#development-guidelines)
+11. [User Interface Design](#user-interface-design)
 
 ## Project Overview
 
@@ -667,6 +668,135 @@ All templates use Bootstrap 5 for responsive design:
 - Flexible grid system
 - Responsive navigation with collapsible menu
 - Touch-friendly buttons and forms
+
+## Dashboard Features
+
+### Overview
+
+The Job Board website includes role-based dashboards that provide users with personalized views of their data and activities. Each dashboard is tailored to the specific needs of different user types: job seekers, employers, and administrators.
+
+### Dashboard Architecture
+
+#### Access Control
+- **Role-based Routing**: Each dashboard route validates user authentication and role permissions
+- **Session Validation**: Ensures user sessions are active and valid before displaying dashboard content
+- **Automatic Redirects**: Unauthorized users are redirected to appropriate pages with informative messages
+
+#### Dashboard Types
+
+##### Job Seeker Dashboard (`/seeker_dashboard`)
+**Purpose**: Provides job seekers with an overview of their job search activities and application status.
+
+**Features**:
+- **Application Statistics**: Visual cards showing total applications, under review, and accepted applications
+- **Application History**: Comprehensive table of all submitted applications with status tracking
+- **Quick Actions**: Direct links to browse new jobs and update profile
+- **Status Indicators**: Color-coded badges for different application statuses
+
+**Template**: [`templates/seeker_dashboard.html`](templates/seeker_dashboard.html)
+
+**Access Control**: 
+- Requires user to be logged in with 'seeker' role
+- Redirects employers and unauthenticated users
+
+##### Employer Dashboard (`/employer_dashboard`)
+**Purpose**: Allows employers to manage their job postings and review incoming applications.
+
+**Features**:
+- **Job Management Statistics**: Cards showing active jobs, total applications, pending reviews, and total views
+- **Posted Jobs Table**: Comprehensive view of all posted jobs with management actions
+- **Recent Applications**: Real-time view of new applications with review actions
+- **Quick Job Posting**: Direct link to create new job postings
+
+**Template**: [`templates/employer_dashboard.html`](templates/employer_dashboard.html)
+
+**Access Control**:
+- Requires user to be logged in with 'employer' role
+- Redirects seekers and unauthenticated users
+
+##### Admin Dashboard (`/admin_dashboard`)
+**Purpose**: Provides administrators with system-wide overview and management capabilities.
+
+**Features**:
+- **System Statistics**: Platform-wide metrics including total users, jobs, and applications
+- **Growth Tracking**: Monthly and daily activity indicators
+- **User Management**: Recent user registrations with role and status information
+- **Job Oversight**: Recent job postings with application counts
+- **Quick Administrative Actions**: Links to user management, job review, and system settings
+
+**Template**: [`templates/admin_dashboard.html`](templates/admin_dashboard.html)
+
+**Access Control**:
+- Requires user to be logged in with 'admin' role
+- Redirects non-admin users with access denied message
+
+### Model Integration
+
+#### Dashboard Data Methods
+
+**User Model Extensions**:
+```python
+def get_applied_jobs(self):
+    """Retrieve job applications for seeker dashboards"""
+    # Returns list of applications with job details and status
+
+def get_posted_jobs(self):
+    """Retrieve posted jobs for employer dashboards"""  
+    # Returns list of jobs with application counts and metrics
+
+def get_recent_applications(self):
+    """Retrieve recent applications for employer dashboards"""
+    # Returns list of applications for employer's jobs
+
+@staticmethod
+def get_system_overview():
+    """Retrieve system statistics for admin dashboard"""
+    # Returns comprehensive system metrics and recent activity
+```
+
+#### Placeholder Data Implementation
+Currently, all dashboard methods return placeholder data to establish the interface structure. This approach allows for:
+
+- **Template Development**: Complete dashboard layouts without database dependencies
+- **UI Testing**: Visual and functional testing of dashboard components
+- **Gradual Implementation**: Easy transition to real database queries
+- **Performance Planning**: Understanding of data requirements before optimization
+
+### Dashboard UI Components
+
+#### Statistics Cards
+- **Visual Impact**: Large icons and numbers for key metrics
+- **Color Coding**: Consistent color scheme across different dashboard types
+- **Responsive Design**: Cards adapt to different screen sizes
+- **Animation Ready**: Structure supports counter animations and transitions
+
+#### Data Tables
+- **Sortable Headers**: Prepared for future sorting functionality
+- **Action Buttons**: Role-appropriate actions for each table row
+- **Status Badges**: Clear visual indicators for different states
+- **Responsive Design**: Tables scroll horizontally on smaller screens
+
+#### Quick Actions
+- **Role-specific Actions**: Tailored action buttons for each user type
+- **Easy Navigation**: Direct links to frequently used features
+- **Visual Hierarchy**: Primary and secondary action differentiation
+
+### Future Enhancements
+
+#### Planned Features
+- **Real Database Integration**: Replace placeholder data with actual queries
+- **Advanced Filtering**: Dashboard filtering and search capabilities
+- **Data Visualization**: Charts and graphs for trend analysis
+- **Export Functionality**: Download dashboard data as reports
+- **Notification System**: Real-time updates for new applications and status changes
+
+#### Performance Optimization
+- **Pagination**: For large datasets in dashboard tables
+- **Caching**: Cache frequently accessed dashboard data
+- **Lazy Loading**: Load dashboard sections on demand
+- **Real-time Updates**: WebSocket integration for live data updates
+
+The dashboard system provides a solid foundation for user engagement and data management while maintaining scalability and performance considerations for future growth.
 
 ## API Endpoints
 
