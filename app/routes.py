@@ -258,6 +258,80 @@ def about():
     """About route - displays information about the job board"""
     return render_template('about.html')
 
+@main.route('/seeker_dashboard')
+def seeker_dashboard():
+    """Job seeker dashboard - displays applied jobs and application status"""
+    # Check if user is logged in
+    if not is_logged_in():
+        flash('Please log in to access your dashboard.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Check if user is a seeker
+    if session.get('user_role') != 'seeker':
+        flash('Access denied. This dashboard is for job seekers only.', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Get current user
+    current_user = get_current_user()
+    if not current_user:
+        flash('User session expired. Please log in again.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Get applied jobs (placeholder data for now)
+    applied_jobs = current_user.get_applied_jobs()
+    
+    return render_template('seeker_dashboard.html', 
+                         applied_jobs=applied_jobs,
+                         user=current_user)
+
+@main.route('/employer_dashboard')
+def employer_dashboard():
+    """Employer dashboard - displays posted jobs and received applications"""
+    # Check if user is logged in
+    if not is_logged_in():
+        flash('Please log in to access your dashboard.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Check if user is an employer
+    if session.get('user_role') != 'employer':
+        flash('Access denied. This dashboard is for employers only.', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Get current user
+    current_user = get_current_user()
+    if not current_user:
+        flash('User session expired. Please log in again.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Get posted jobs and applications (placeholder data for now)
+    posted_jobs = current_user.get_posted_jobs()
+    recent_applications = current_user.get_recent_applications()
+    
+    return render_template('employer_dashboard.html',
+                         posted_jobs=posted_jobs,
+                         recent_applications=recent_applications,
+                         user=current_user)
+
+@main.route('/admin_dashboard')
+def admin_dashboard():
+    """Admin dashboard - displays system overview and statistics"""
+    # Check if user is logged in
+    if not is_logged_in():
+        flash('Please log in to access the admin dashboard.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Check if user is an admin (you'll need to add admin role to your system)
+    if session.get('user_role') != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Get system overview (placeholder data for now)
+    system_stats = User.get_system_overview()
+    
+    return render_template('admin_dashboard.html',
+                         stats=system_stats,
+                         user=get_current_user())
+
 # Utility function to check if user is logged in
 def is_logged_in():
     """Check if user is currently logged in"""
