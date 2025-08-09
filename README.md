@@ -1,6 +1,6 @@
 # Job Board Website
 
-A simple job board website built with Python Flask, HTML, CSS, JavaScript, and MySQL.
+A simple job board website built with Python Flask, HTML, CSS, JavaScript, and SQLite3.
 
 ## Quick Start
 
@@ -101,12 +101,45 @@ job_board_website/
 └── readme.md              # This file
 ```
 
+## Profile Management
+
+The application includes comprehensive user profile management with:
+
+- **Profile Viewing**: Complete profile display with completion tracking and role-based statistics
+- **Profile Editing**: Secure profile updates with comprehensive validation and password management
+- **Profile Completion**: Visual progress tracking to encourage complete profiles
+- **Contact Management**: Optional contact information including phone, location, and bio
+- **Security Features**: Current password verification for changes and input validation
+
+Users can view their profile information, track completion percentage, and safely update their details including optional password changes. The system includes client-side and server-side validation for optimal user experience.
+
+## Database Migration
+
+The application has been **migrated from MySQL to SQLite3** for improved simplicity and portability:
+
+### Benefits of SQLite3
+- ✅ **No Server Setup**: File-based database with no separate server required
+- ✅ **Portability**: Easy database file backup and migration
+- ✅ **Development Friendly**: Perfect for development and testing
+- ✅ **Cross-platform**: Consistent behavior across all platforms
+- ✅ **ACID Compliance**: Full transaction support and data integrity
+
+### Migration Details
+- All existing models and relationships remain fully compatible
+- Database file located at: `job_board.db` in project root
+- Configuration updated in `config/db_config.py`
+- No changes required to existing SQLAlchemy queries
+
+See the [detailed documentation](docs/detailed_explanation.md#profile-management-system) for complete profile management specifications and SQLite3 migration details.
+
 ## Database Models
 
-The application uses three main models:
-- **User**: Handles both job seekers and employers with role-based access and secure authentication
+The application uses three main models with **SQLite3 database**:
+- **User**: Enhanced with profile fields (full_name, phone, location, bio) and profile management methods
 - **JobPosting**: Manages job listings with detailed information
 - **Application**: Tracks job applications and their status
+
+All models include comprehensive methods for profile management, dashboard data retrieval, and secure database operations.
 
 See the [detailed documentation](docs/detailed_explanation.md#database-models) for complete model specifications and relationships.
 
@@ -125,3 +158,4 @@ This project is open source and available under the [MIT License](LICENSE).
 ## Support
 
 For questions or issues, please check the [detailed documentation](docs/detailed_explanation.md) or open an issue in the project repository.
+

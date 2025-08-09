@@ -1,7 +1,7 @@
 # Job Board Website - Detailed Documentation
 
 ## Table of Contents
-1. [Project Overview](#project-overview)
+<!-- 1. [Project Overview](#project-overview) -->
 2. [Architecture](#architecture)
 3. [Setup Instructions](#setup-instructions)
 4. [Database Schema](#database-schema)
@@ -11,8 +11,9 @@
 8. [Dashboard Features](#dashboard-features)
 9. [Real Data Integration](#real-data-integration)
 10. [API Endpoints](#api-endpoints)
-11. [Development Guidelines](#development-guidelines)
-12. [User Interface Design](#user-interface-design)
+11. [Profile Management System](#profile-management-system)
+12. [Development Guidelines](#development-guidelines)
+13. [User Interface Design](#user-interface-design)
 
 ## Project Overview
 
@@ -150,9 +151,9 @@ The job board application uses three main tables to manage users, job postings, 
 
 ```
 users (1) ----< job_postings (1) ----< applications (n)
-  |                                         ^
-  |                                         |
-  +----------- seeker_id ------------------+
+    |                                         ^
+    |                                         |
+    +----------- seeker_id ------------------+
 ```
 
 ## Database Models
@@ -262,19 +263,19 @@ create_tables(app)  # Creates all tables if they don't exist
 ```python
 # Create a new employer
 employer = User(username='techcorp', email='hr@techcorp.com', 
-                password='secure123', role='employer')
+                                password='secure123', role='employer')
 
 # Create a job posting
 job = JobPosting(title='Software Developer', 
-                description='Python developer needed...',
-                employer_id=employer.id,
-                company_name='TechCorp Inc.',
-                location='Remote',
-                job_type='full-time')
+                                description='Python developer needed...',
+                                employer_id=employer.id,
+                                company_name='TechCorp Inc.',
+                                location='Remote',
+                                job_type='full-time')
 
 # Create an application
 application = Application(job_id=job.id, seeker_id=seeker.id,
-                         cover_letter='I am interested...')
+                                                 cover_letter='I am interested...')
 ```
 
 ## Authentication System
@@ -384,28 +385,28 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 ```python
 @main.app_template_global()
 def current_user():
-    """Get current logged-in user object"""
-    if 'user_id' in session:
-        return User.query.get(session['user_id'])
-    return None
+        """Get current logged-in user object"""
+        if 'user_id' in session:
+                return User.query.get(session['user_id'])
+        return None
 
 @main.app_template_global()
 def logged_in():
-    """Check if user is currently logged in"""
-    return 'user_id' in session
+        """Check if user is currently logged in"""
+        return 'user_id' in session
 ```
 
 **Route Helper Functions**:
 ```python
 def is_logged_in():
-    """Check if user is currently logged in"""
-    return 'user_id' in session
+        """Check if user is currently logged in"""
+        return 'user_id' in session
 
 def get_current_user():
-    """Get current logged-in user object"""
-    if is_logged_in():
-        return User.query.get(session['user_id'])
-    return None
+        """Get current logged-in user object"""
+        if is_logged_in():
+                return User.query.get(session['user_id'])
+        return None
 ```
 
 ### User Interface Integration
@@ -421,8 +422,8 @@ The navigation bar dynamically changes based on authentication status:
 - User dropdown with username and role badge
 - Profile link (placeholder)
 - Role-specific links:
-  - Employers: "Post Job"
-  - Seekers: "My Applications"
+    - Employers: "Post Job"
+    - Seekers: "My Applications"
 - Logout link
 
 #### Flash Message System
@@ -459,16 +460,16 @@ The User model provides essential authentication methods:
 
 ```python
 def __init__(self, username, email, password, role='seeker'):
-    """Initialize user with hashed password"""
-    self.password = generate_password_hash(password)
+        """Initialize user with hashed password"""
+        self.password = generate_password_hash(password)
 
 def check_password(self, password):
-    """Verify password against stored hash"""
-    return check_password_hash(self.password, password)
+        """Verify password against stored hash"""
+        return check_password_hash(self.password, password)
 
 def set_password(self, password):
-    """Update user password with new hash"""
-    self.password = generate_password_hash(password)
+        """Update user password with new hash"""
+        self.password = generate_password_hash(password)
 ```
 
 #### User Registration Flow
@@ -565,57 +566,57 @@ The application uses Flask blueprints to organize routes in [`app/routes.py`](ap
 - **Purpose**: Landing page with overview and statistics
 - **Template**: [`templates/home.html`](templates/home.html)
 - **Features**:
-  - Displays total number of active jobs and users
-  - Welcome message and platform overview
-  - Feature highlights and call-to-action buttons
-  - Responsive design with Bootstrap components
+    - Displays total number of active jobs and users
+    - Welcome message and platform overview
+    - Feature highlights and call-to-action buttons
+    - Responsive design with Bootstrap components
 
 #### Job Listings Route (`/jobs`)
 - **Purpose**: Browse and search available job postings
 - **Template**: [`templates/jobs.html`](templates/jobs.html)
 - **Features**:
-  - Paginated job listings (10 per page)
-  - Search and filter functionality
-  - Job cards with key information (title, company, location, type)
-  - Responsive grid layout
-  - "No results" state handling
+    - Paginated job listings (10 per page)
+    - Search and filter functionality
+    - Job cards with key information (title, company, location, type)
+    - Responsive grid layout
+    - "No results" state handling
 
 #### Login Route (`/login`)
 - **Purpose**: User authentication form
 - **Template**: [`templates/login.html`](templates/login.html)
 - **Features**:
-  - Email and password input fields
-  - "Remember me" checkbox
-  - Links to registration and password recovery
-  - Form validation and error handling
+    - Email and password input fields
+    - "Remember me" checkbox
+    - Links to registration and password recovery
+    - Form validation and error handling
 
 #### Registration Route (`/register`)
 - **Purpose**: New user account creation
 - **Template**: [`templates/register.html`](templates/register.html)
 - **Features**:
-  - Username, email, and password fields
-  - Role selection (job seeker or employer)
-  - Password confirmation
-  - Terms of service agreement
+    - Username, email, and password fields
+    - Role selection (job seeker or employer)
+    - Password confirmation
+    - Terms of service agreement
 
 #### About Route (`/about`)
 - **Purpose**: Information about the platform
 - **Template**: [`templates/about.html`](templates/about.html)
 - **Features**:
-  - Mission statement and platform overview
-  - How-it-works explanation
-  - Call-to-action buttons
+    - Mission statement and platform overview
+    - How-it-works explanation
+    - Call-to-action buttons
 
 ### Template Architecture
 
 #### Base Template ([`templates/base.html`](templates/base.html))
 - **Purpose**: Common layout and structure for all pages
 - **Features**:
-  - Responsive navigation bar with brand and menu items
-  - Flash message display system
-  - Bootstrap 5 integration
-  - Footer with copyright information
-  - JavaScript and CSS includes
+    - Responsive navigation bar with brand and menu items
+    - Flash message display system
+    - Bootstrap 5 integration
+    - Footer with copyright information
+    - JavaScript and CSS includes
 
 #### Template Inheritance
 All page templates extend the base template using Jinja2 inheritance:
@@ -738,21 +739,21 @@ The Job Board website includes role-based dashboards that provide users with per
 **User Model Extensions**:
 ```python
 def get_applied_jobs(self):
-    """Retrieve job applications for seeker dashboards"""
-    # Returns list of applications with job details and status
+        """Retrieve job applications for seeker dashboards"""
+        # Returns list of applications with job details and status
 
 def get_posted_jobs(self):
-    """Retrieve posted jobs for employer dashboards"""  
-    # Returns list of jobs with application counts and metrics
+        """Retrieve posted jobs for employer dashboards"""  
+        # Returns list of jobs with application counts and metrics
 
 def get_recent_applications(self):
-    """Retrieve recent applications for employer dashboards"""
-    # Returns list of applications for employer's jobs
+        """Retrieve recent applications for employer dashboards"""
+        # Returns list of applications for employer's jobs
 
 @staticmethod
 def get_system_overview():
-    """Retrieve system statistics for admin dashboard"""
-    # Returns comprehensive system metrics and recent activity
+        """Retrieve system statistics for admin dashboard"""
+        # Returns comprehensive system metrics and recent activity
 ```
 
 #### Placeholder Data Implementation
@@ -814,17 +815,17 @@ The dashboard data methods use SQLAlchemy ORM for efficient and secure database 
 ```python
 # Example: Job seeker applied jobs query
 applications = db.session.query(
-    Application.id.label('application_id'),
-    Application.application_date,
-    Application.status,
-    JobPosting.title.label('job_title'),
-    JobPosting.company_name
+        Application.id.label('application_id'),
+        Application.application_date,
+        Application.status,
+        JobPosting.title.label('job_title'),
+        JobPosting.company_name
 ).join(
-    JobPosting, Application.job_id == JobPosting.id
+        JobPosting, Application.job_id == JobPosting.id
 ).filter(
-    Application.seeker_id == self.id
+        Application.seeker_id == self.id
 ).order_by(
-    desc(Application.application_date)
+        desc(Application.application_date)
 ).all()
 ```
 
@@ -872,14 +873,14 @@ accepted_count = len([app for app in applied_jobs if app.get('status') == 'accep
 **Data Structure**:
 ```python
 {
-    'application_id': int,
-    'job_title': str,
-    'company_name': str,
-    'location': str,
-    'job_type': str,
-    'application_date': datetime,
-    'status': str,
-    'cover_letter': str
+        'application_id': int,
+        'job_title': str,
+        'company_name': str,
+        'location': str,
+        'job_type': str,
+        'application_date': datetime,
+        'status': str,
+        'cover_letter': str
 }
 ```
 
@@ -895,13 +896,13 @@ accepted_count = len([app for app in applied_jobs if app.get('status') == 'accep
 **Data Structure**:
 ```python
 {
-    'id': int,
-    'title': str,
-    'company_name': str,
-    'location': str,
-    'posted_date': datetime,
-    'is_active': bool,
-    'application_count': int
+        'id': int,
+        'title': str,
+        'company_name': str,
+        'location': str,
+        'posted_date': datetime,
+        'is_active': bool,
+        'application_count': int
 }
 ```
 
@@ -931,25 +932,25 @@ Templates now use Jinja2 loops and conditionals to display real data:
 
 ```html
 {% if applied_jobs %}
-    {% for application in applied_jobs %}
-    <tr>
-        <td>{{ application.job_title }}</td>
-        <td>{{ application.company_name }}</td>
-        <td>{{ application.application_date.strftime('%B %d, %Y') }}</td>
-        <td>
-            {% if application.status == 'pending' %}
-                <span class="badge bg-warning">Pending</span>
-            {% elif application.status == 'accepted' %}
-                <span class="badge bg-success">Accepted</span>
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
+        {% for application in applied_jobs %}
+        <tr>
+                <td>{{ application.job_title }}</td>
+                <td>{{ application.company_name }}</td>
+                <td>{{ application.application_date.strftime('%B %d, %Y') }}</td>
+                <td>
+                        {% if application.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                        {% elif application.status == 'accepted' %}
+                                <span class="badge bg-success">Accepted</span>
+                        {% endif %}
+                </td>
+        </tr>
+        {% endfor %}
 {% else %}
-    <div class="text-center py-5">
-        <h5 class="text-muted">No Applications Yet</h5>
-        <p class="text-muted">Start applying for jobs to see them here.</p>
-    </div>
+        <div class="text-center py-5">
+                <h5 class="text-muted">No Applications Yet</h5>
+                <p class="text-muted">Start applying for jobs to see them here.</p>
+        </div>
 {% endif %}
 ```
 
@@ -1035,6 +1036,252 @@ The real data integration provides a solid foundation for a production-ready job
 - `POST /api/jobs/<id>/apply` - Apply for job
 - `GET /api/applications` - Get user's applications
 - `GET /api/jobs/<id>/applications` - Get applications for job (owner only)
+
+## Profile Management System
+
+### Overview
+
+The Job Board website includes a comprehensive profile management system that allows users to view and edit their personal information, contact details, and account settings. The system provides role-based profile views and secure profile updating capabilities.
+
+### Database Migration to SQLite3
+
+#### Transition from MySQL to SQLite3
+
+The application has been migrated from MySQL to SQLite3 for improved simplicity and portability:
+
+**Benefits of SQLite3**:
+- **No Server Setup**: SQLite3 is file-based and requires no separate database server
+- **Portability**: Database file can be easily moved and backed up
+- **Simplicity**: Reduced configuration and maintenance overhead
+- **Development Friendly**: Perfect for development and small to medium applications
+- **ACID Compliance**: Full ACID transaction support
+- **Cross-platform**: Works consistently across all platforms
+
+**Configuration Changes**:
+```python
+# New SQLite3 configuration in config/db_config.py
+SQLALCHEMY_DATABASE_URI = 'sqlite:///job_board.db'
+DATABASE_PATH = PROJECT_ROOT / 'job_board.db'
+```
+
+**Migration Considerations**:
+- All existing SQLAlchemy models remain compatible
+- Foreign key relationships work identically
+- Query syntax remains unchanged
+- Performance is excellent for typical job board usage
+
+### Profile Management Features
+
+#### Profile View Route (`/profile`)
+
+**Purpose**: Display comprehensive user profile information with statistics and completion tracking.
+
+**Features**:
+- **Complete Profile Display**: Shows all user information including optional fields
+- **Profile Completion Tracking**: Visual progress bar showing profile completeness percentage
+- **Role-based Statistics**: Different metrics based on user role (seeker vs employer)
+- **Quick Actions**: Context-sensitive action buttons for common tasks
+- **Account Age Tracking**: Shows how long the user has been a member
+
+**Access Control**:
+- Requires active user session
+- Users can only view their own profile
+- Redirects to login if not authenticated
+
+**Profile Data Structure**:
+```python
+{
+        'username': str,
+        'email': str,
+        'role': str,
+        'full_name': str,
+        'phone': str,
+        'location': str,
+        'bio': str,
+        'created_at': datetime,
+        'updated_at': datetime,
+        'is_active': bool
+}
+```
+
+#### Profile Edit Route (`/profile/edit`)
+
+**Purpose**: Allow users to safely update their profile information with comprehensive validation.
+
+**Features**:
+- **Secure Field Updates**: Username, email, and optional profile fields
+- **Password Change**: Optional password update with current password verification
+- **Comprehensive Validation**: Server-side and client-side input validation
+- **Uniqueness Checking**: Ensures username and email remain unique
+- **Transaction Safety**: Database rollback on errors
+
+**Validation Rules**:
+- **Username**: 3-80 characters, must be unique
+- **Email**: Valid email format, must be unique
+- **Password**: Minimum 6 characters (if changing)
+- **Phone**: Optional, maximum 20 characters
+- **Location**: Optional, maximum 100 characters
+- **Bio**: Optional, maximum 500 characters
+
+#### Profile Completion System
+
+**Completion Calculation**:
+```python
+def get_profile_completion_percentage(self):
+        fields = [username, email, full_name, phone, location, bio]
+        completed_fields = sum(1 for field in fields if field and field.strip())
+        return int((completed_fields / len(fields)) * 100)
+```
+
+**Visual Indicators**:
+- **Red Progress Bar**: < 50% completion
+- **Yellow Progress Bar**: 50-79% completion  
+- **Green Progress Bar**: 80%+ completion
+
+### Enhanced User Model Methods
+
+#### Profile Data Management
+
+**get_profile_data()**: Returns formatted profile data for template display
+```python
+def get_profile_data(self):
+        return {
+                'id': self.id,
+                'username': self.username,
+                'email': self.email,
+                'role_display': 'Job Seeker' if self.role == 'seeker' else 'Employer',
+                # ... additional formatted fields
+        }
+```
+
+**update_profile()**: Secure profile update with transaction safety
+```python
+def update_profile(self, username=None, email=None, new_password=None, ...):
+        try:
+                # Update fields with validation
+                # Commit changes
+                return True
+        except Exception:
+                db.session.rollback()
+                return False
+```
+
+**get_profile_completion_percentage()**: Calculate profile completeness
+- Tracks completion of core profile fields
+- Provides user feedback on profile quality
+- Encourages complete profile creation
+
+### Template Implementation
+
+#### Profile Display Template (`profile.html`)
+
+**Layout Structure**:
+- **Main Profile Card**: Displays all user information in organized sections
+- **Profile Completion Widget**: Visual progress tracking with percentage
+- **Statistics Panel**: Role-based metrics and account information
+- **Quick Actions**: Context-sensitive navigation buttons
+
+**Features**:
+- **Responsive Design**: Mobile-friendly layout with Bootstrap 5
+- **Conditional Display**: Shows only populated fields
+- **Role-based Content**: Different statistics for seekers vs employers
+- **Interactive Elements**: Progress bars, badges, and action buttons
+
+#### Profile Edit Template (`edit_profile.html`)
+
+**Form Sections**:
+1. **Basic Information**: Username, email, full name
+2. **Contact Information**: Phone, location, bio
+3. **Password Change**: Current, new, and confirm password fields
+
+**Validation Features**:
+- **Client-side Validation**: JavaScript form validation
+- **Real-time Feedback**: Immediate validation messages
+- **Required Field Indicators**: Visual asterisks for required fields
+- **Password Matching**: Confirms password match before submission
+
+**Security Features**:
+- **Current Password Verification**: Required for password changes
+- **CSRF Protection**: Form token validation
+- **Input Sanitization**: Secure handling of user inputs
+
+### Database Schema Updates
+
+#### SQLite3 Compatibility
+
+**Field Types**:
+```sql
+-- SQLite3 compatible field definitions
+username VARCHAR(80) NOT NULL UNIQUE
+email VARCHAR(120) NOT NULL UNIQUE
+password VARCHAR(255) NOT NULL
+role VARCHAR(20) NOT NULL DEFAULT 'seeker'
+full_name VARCHAR(100)
+phone VARCHAR(20)
+location VARCHAR(100)
+bio TEXT
+created_at DATETIME NOT NULL
+updated_at DATETIME NOT NULL
+is_active BOOLEAN NOT NULL DEFAULT 1
+```
+
+**Index Optimization**:
+- **Primary Keys**: Auto-incrementing integer IDs
+- **Unique Indexes**: Username and email fields
+- **Search Indexes**: Role and active status fields
+- **Foreign Keys**: Maintained relationship integrity
+
+### Security Considerations
+
+#### Data Protection
+
+- **Session Validation**: All profile operations require active sessions
+- **Input Sanitization**: XSS prevention through proper escaping
+- **SQL Injection Prevention**: SQLAlchemy ORM parameterized queries
+- **Password Security**: Werkzeug hashing with salt generation
+
+#### Privacy Controls
+
+- **Self-access Only**: Users can only view/edit their own profiles
+- **Role Verification**: Proper role-based access control
+- **Audit Trail**: Updated timestamps for change tracking
+- **Data Validation**: Comprehensive input validation
+
+### Performance Optimizations
+
+#### Database Efficiency
+
+- **Single Query Profile Loading**: Efficient data retrieval
+- **Transaction Management**: Proper commit/rollback handling
+- **Connection Pooling**: SQLite3 connection optimization
+- **Index Usage**: Optimized queries with proper indexing
+
+#### User Experience
+
+- **Fast Loading**: Optimized template rendering
+- **Progressive Enhancement**: JavaScript validation overlay
+- **Error Handling**: Graceful error recovery
+- **Success Feedback**: Clear confirmation messages
+
+### Future Enhancements
+
+#### Planned Features
+
+- **Profile Pictures**: Avatar upload and management
+- **Privacy Settings**: Configurable profile visibility
+- **Profile Sharing**: Public profile URLs for networking
+- **Profile Export**: Download profile data
+- **Activity Logging**: Detailed profile change history
+
+#### Integration Opportunities
+
+- **Social Login**: OAuth integration for profile importing
+- **Resume Upload**: PDF resume attachment
+- **Skill Tags**: Searchable skill categories
+- **Portfolio Links**: External portfolio integration
+- **Verification Badges**: Email and phone verification
+
+The profile management system provides a comprehensive foundation for user account management while maintaining security, usability, and performance standards suitable for a professional job board platform.
 
 ## Development Guidelines
 
