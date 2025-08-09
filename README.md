@@ -20,6 +20,18 @@ A simple job board website built with Python Flask, HTML, CSS, JavaScript, and M
 - **Modern UI**: Responsive design with Bootstrap 5, animations, and interactive components
 - **Enhanced UX**: Real-time form validation, loading states, and smooth animations
 
+## Dashboard Features
+
+The application includes comprehensive role-based dashboards that provide personalized user experiences:
+
+- **Job Seeker Dashboard**: Track application status, view applied jobs, and access quick actions for job searching
+- **Employer Dashboard**: Manage job postings, review applications, and monitor hiring metrics  
+- **Admin Dashboard**: System-wide overview with user management, job oversight, and platform statistics
+
+Each dashboard is tailored to specific user roles with appropriate access controls and relevant data visualization. Dashboards feature responsive design, interactive components, and real-time status tracking.
+
+See the [detailed documentation](docs/detailed_explanation.md#dashboard-features) for complete dashboard specifications, access control details, and implementation information.
+
 ## Authentication System
 
 The application includes a comprehensive authentication system featuring:
