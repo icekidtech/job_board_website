@@ -53,166 +53,281 @@ class User(db.Model):
         return f'<User {self.username}>'
     
     def get_applied_jobs(self):
-        """Get all jobs this seeker has applied for (placeholder data)"""
+        """Get all jobs this seeker has applied for with real database data"""
         if self.role != 'seeker':
             return []
         
-        # Placeholder data - replace with actual database queries later
-        from datetime import datetime, timedelta
-        placeholder_applications = [
-            {
-                'job_title': 'Senior Python Developer',
-                'company_name': 'TechCorp Inc.',
-                'job_type': 'Full-time',
-                'application_date': datetime.now() - timedelta(days=5),
-                'status': 'pending'
-            },
-            {
-                'job_title': 'Frontend Developer',
-                'company_name': 'WebSolutions Ltd.',
-                'job_type': 'Contract',
-                'application_date': datetime.now() - timedelta(days=12),
-                'status': 'reviewed'
-            },
-            {
-                'job_title': 'Data Analyst',
-                'company_name': 'DataFlow Corp.',
-                'job_type': 'Full-time',
-                'application_date': datetime.now() - timedelta(days=18),
-                'status': 'rejected'
-            }
-        ]
-        return placeholder_applications
+        try:
+            # Query applications with job details using SQLAlchemy joins
+            from sqlalchemy import desc
+            
+            applications = db.session.query(
+                Application.id.label('application_id'),
+                Application.application_date,
+                Application.status,
+                Application.cover_letter,
+                JobPosting.id.label('job_id'),
+                JobPosting.title.label('job_title'),
+                JobPosting.company_name,
+                JobPosting.location,
+                JobPosting.job_type,
+                JobPosting.salary_range,
+                JobPosting.posted_date
+            ).join(
+                JobPosting, Application.job_id == JobPosting.id
+            ).filter(
+                Application.seeker_id == self.id
+            ).order_by(
+                desc(Application.application_date)
+            ).all()
+            
+            # Convert to list of dictionaries for template use
+            applied_jobs = []
+            for app in applications:
+                applied_jobs.append({
+                    'application_id': app.application_id,
+                    'job_id': app.job_id,
+                    'job_title': app.job_title,
+                    'company_name': app.company_name or 'Not specified',
+                    'location': app.location or 'Not specified',
+                    'job_type': app.job_type or 'Not specified',
+                    'salary_range': app.salary_range,
+                    'application_date': app.application_date,
+                    'status': app.status,
+                    'cover_letter': app.cover_letter,
+                    'posted_date': app.posted_date
+                })
+            
+            return applied_jobs
+            
+        except Exception as e:
+            print(f"Error fetching applied jobs: {e}")
+            return []
     
     def get_posted_jobs(self):
-        """Get all jobs posted by this employer (placeholder data)"""
+        """Get all jobs posted by this employer with real database data"""
         if self.role != 'employer':
             return []
         
-        # Placeholder data - replace with actual database queries later
-        from datetime import datetime, timedelta
-        placeholder_jobs = [
-            {
-                'title': 'Python Developer',
-                'job_type': 'Full-time',
-                'location': 'Remote',
-                'posted_date': datetime.now() - timedelta(days=7),
-                'is_active': True,
-                'application_count': 15,
-                'view_count': 120
-            },
-            {
-                'title': 'UI/UX Designer',
-                'job_type': 'Part-time',
-                'location': 'New York',
-                'posted_date': datetime.now() - timedelta(days=14),
-                'is_active': True,
-                'application_count': 8,
-                'view_count': 85
-            },
-            {
-                'title': 'Project Manager',
-                'job_type': 'Full-time',
-                'location': 'San Francisco',
-                'posted_date': datetime.now() - timedelta(days=21),
-                'is_active': False,
-                'application_count': 22,
-                'view_count': 200
-            }
-        ]
-        return placeholder_jobs
+        try:
+            # Query jobs with application counts using SQLAlchemy
+            from sqlalchemy import func, desc
+            
+            jobs_with_counts = db.session.query(
+                JobPosting.id,
+                JobPosting.title,
+                JobPosting.description,
+                JobPosting.company_name,
+                JobPosting.location,
+                JobPosting.salary_range,
+                JobPosting.job_type,
+                JobPosting.posted_date,
+                JobPosting.is_active,
+                func.count(Application.id).label('application_count')
+            ).outerjoin(
+                Application, JobPosting.id == Application.job_id
+            ).filter(
+                JobPosting.employer_id == self.id
+            ).group_by(
+                JobPosting.id
+            ).order_by(
+                desc(JobPosting.posted_date)
+            ).all()
+            
+            # Convert to list of dictionaries for template use
+            posted_jobs = []
+            for job in jobs_with_counts:
+                posted_jobs.append({
+                    'id': job.id,
+                    'title': job.title,
+                    'description': job.description,
+                    'company_name': job.company_name,
+                    'location': job.location or 'Remote',
+                    'salary_range': job.salary_range,
+                    'job_type': job.job_type or 'Full-time',
+                    'posted_date': job.posted_date,
+                    'is_active': job.is_active,
+                    'application_count': job.application_count or 0,
+                    'view_count': 0  # Placeholder for view tracking feature
+                })
+            
+            return posted_jobs
+            
+        except Exception as e:
+            print(f"Error fetching posted jobs: {e}")
+            return []
     
     def get_recent_applications(self):
-        """Get recent applications for this employer's jobs (placeholder data)"""
+        """Get recent applications for this employer's jobs with real database data"""
         if self.role != 'employer':
             return []
         
-        # Placeholder data - replace with actual database queries later
-        from datetime import datetime, timedelta
-        placeholder_applications = [
-            {
-                'applicant_name': 'John Smith',
-                'applicant_email': 'john.smith@email.com',
-                'job_title': 'Python Developer',
-                'application_date': datetime.now() - timedelta(days=1),
-                'status': 'pending'
-            },
-            {
-                'applicant_name': 'Sarah Johnson',
-                'applicant_email': 'sarah.j@email.com',
-                'job_title': 'UI/UX Designer',
-                'application_date': datetime.now() - timedelta(days=3),
-                'status': 'reviewed'
-            },
-            {
-                'applicant_name': 'Mike Wilson',
-                'applicant_email': 'mike.wilson@email.com',
-                'job_title': 'Python Developer',
-                'application_date': datetime.now() - timedelta(days=5),
-                'status': 'accepted'
-            }
-        ]
-        return placeholder_applications
+        try:
+            # Query applications for employer's jobs with seeker details
+            from sqlalchemy import desc
+            
+            applications = db.session.query(
+                Application.id.label('application_id'),
+                Application.application_date,
+                Application.status,
+                Application.cover_letter,
+                JobPosting.title.label('job_title'),
+                User.username.label('applicant_name'),
+                User.email.label('applicant_email')
+            ).join(
+                JobPosting, Application.job_id == JobPosting.id
+            ).join(
+                User, Application.seeker_id == User.id
+            ).filter(
+                JobPosting.employer_id == self.id
+            ).order_by(
+                desc(Application.application_date)
+            ).limit(20).all()  # Limit to recent 20 applications
+            
+            # Convert to list of dictionaries for template use
+            recent_applications = []
+            for app in applications:
+                recent_applications.append({
+                    'application_id': app.application_id,
+                    'applicant_name': app.applicant_name,
+                    'applicant_email': app.applicant_email,
+                    'job_title': app.job_title,
+                    'application_date': app.application_date,
+                    'status': app.status,
+                    'cover_letter': app.cover_letter
+                })
+            
+            return recent_applications
+            
+        except Exception as e:
+            print(f"Error fetching recent applications: {e}")
+            return []
     
     @staticmethod
     def get_system_overview():
-        """Get system overview statistics for admin dashboard (placeholder data)"""
-        from datetime import datetime, timedelta
-        
-        # Placeholder data - replace with actual database queries later
-        return {
-            'total_users': 1247,
-            'total_jobs': 89,
-            'total_applications': 432,
-            'total_employers': 156,
-            'active_employers': 98,
-            'new_users_this_month': 78,
-            'new_jobs_this_month': 23,
-            'new_applications_this_month': 145,
-            'applications_today': 12,
-            'jobs_posted_today': 3,
-            'new_users_today': 5,
-            'recent_users': [
-                {
-                    'username': 'tech_recruiter',
-                    'role': 'employer',
-                    'created_at': datetime.now() - timedelta(days=1),
-                    'is_active': True
-                },
-                {
-                    'username': 'job_seeker_123',
-                    'role': 'seeker',
-                    'created_at': datetime.now() - timedelta(days=2),
-                    'is_active': True
-                },
-                {
-                    'username': 'dev_company',
-                    'role': 'employer',
-                    'created_at': datetime.now() - timedelta(days=3),
-                    'is_active': True
-                }
-            ],
-            'recent_jobs': [
-                {
-                    'title': 'Senior Software Engineer',
-                    'company_name': 'TechCorp',
-                    'posted_date': datetime.now() - timedelta(days=1),
-                    'application_count': 8
-                },
-                {
-                    'title': 'Marketing Manager',
-                    'company_name': 'MarketPro',
-                    'posted_date': datetime.now() - timedelta(days=2),
-                    'application_count': 5
-                },
-                {
-                    'title': 'Data Scientist',
-                    'company_name': 'DataFlow',
-                    'posted_date': datetime.now() - timedelta(days=3),
-                    'application_count': 12
-                }
-            ]
-        }
+        """Get system overview statistics for admin dashboard with real database data"""
+        try:
+            from sqlalchemy import func, and_, extract
+            from datetime import datetime, timedelta
+            
+            # Calculate date ranges
+            now = datetime.now()
+            start_of_month = datetime(now.year, now.month, 1)
+            start_of_today = datetime(now.year, now.month, now.day)
+            
+            # Total counts
+            total_users = db.session.query(func.count(User.id)).scalar() or 0
+            total_jobs = db.session.query(func.count(JobPosting.id)).filter(
+                JobPosting.is_active == True
+            ).scalar() or 0
+            total_applications = db.session.query(func.count(Application.id)).scalar() or 0
+            
+            # User role counts
+            total_employers = db.session.query(func.count(User.id)).filter(
+                User.role == 'employer'
+            ).scalar() or 0
+            
+            active_employers = db.session.query(func.count(User.id)).filter(
+                and_(User.role == 'employer', User.is_active == True)
+            ).scalar() or 0
+            
+            # Monthly counts
+            new_users_this_month = db.session.query(func.count(User.id)).filter(
+                User.created_at >= start_of_month
+            ).scalar() or 0
+            
+            new_jobs_this_month = db.session.query(func.count(JobPosting.id)).filter(
+                JobPosting.posted_date >= start_of_month
+            ).scalar() or 0
+            
+            new_applications_this_month = db.session.query(func.count(Application.id)).filter(
+                Application.application_date >= start_of_month
+            ).scalar() or 0
+            
+            # Daily counts
+            applications_today = db.session.query(func.count(Application.id)).filter(
+                Application.application_date >= start_of_today
+            ).scalar() or 0
+            
+            jobs_posted_today = db.session.query(func.count(JobPosting.id)).filter(
+                JobPosting.posted_date >= start_of_today
+            ).scalar() or 0
+            
+            new_users_today = db.session.query(func.count(User.id)).filter(
+                User.created_at >= start_of_today
+            ).scalar() or 0
+            
+            # Recent users
+            recent_users_query = db.session.query(User).order_by(
+                User.created_at.desc()
+            ).limit(5).all()
+            
+            recent_users = []
+            for user in recent_users_query:
+                recent_users.append({
+                    'username': user.username,
+                    'role': user.role,
+                    'created_at': user.created_at,
+                    'is_active': user.is_active
+                })
+            
+            # Recent jobs
+            recent_jobs_query = db.session.query(
+                JobPosting.title,
+                JobPosting.company_name,
+                JobPosting.posted_date,
+                func.count(Application.id).label('application_count')
+            ).outerjoin(
+                Application, JobPosting.id == Application.job_id
+            ).group_by(
+                JobPosting.id
+            ).order_by(
+                JobPosting.posted_date.desc()
+            ).limit(5).all()
+            
+            recent_jobs = []
+            for job in recent_jobs_query:
+                recent_jobs.append({
+                    'title': job.title,
+                    'company_name': job.company_name or 'N/A',
+                    'posted_date': job.posted_date,
+                    'application_count': job.application_count or 0
+                })
+            
+            return {
+                'total_users': total_users,
+                'total_jobs': total_jobs,
+                'total_applications': total_applications,
+                'total_employers': total_employers,
+                'active_employers': active_employers,
+                'new_users_this_month': new_users_this_month,
+                'new_jobs_this_month': new_jobs_this_month,
+                'new_applications_this_month': new_applications_this_month,
+                'applications_today': applications_today,
+                'jobs_posted_today': jobs_posted_today,
+                'new_users_today': new_users_today,
+                'recent_users': recent_users,
+                'recent_jobs': recent_jobs
+            }
+            
+        except Exception as e:
+            print(f"Error fetching system overview: {e}")
+            # Return default values if query fails
+            return {
+                'total_users': 0,
+                'total_jobs': 0,
+                'total_applications': 0,
+                'total_employers': 0,
+                'active_employers': 0,
+                'new_users_this_month': 0,
+                'new_jobs_this_month': 0,
+                'new_applications_this_month': 0,
+                'applications_today': 0,
+                'jobs_posted_today': 0,
+                'new_users_today': 0,
+                'recent_users': [],
+                'recent_jobs': []
+            }
 
 
 class JobPosting(db.Model):

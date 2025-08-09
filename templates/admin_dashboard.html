@@ -16,17 +16,17 @@
         </div>
     </div>
 
-    <!-- System Statistics -->
+    <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card text-center h-100 shadow-sm border-primary">
                 <div class="card-body">
                     <i class="fas fa-users text-primary fs-1 mb-3"></i>
-                    <h4 class="card-title">{{ stats.total_users }}</h4>
+                    <h4 class="card-title">{{ stats.total_users or 0 }}</h4>
                     <p class="card-text text-muted">Total Users</p>
                     <small class="text-success">
                         <i class="fas fa-arrow-up"></i>
-                        {{ stats.new_users_this_month }} this month
+                        {{ stats.new_users_this_month or 0 }} this month
                     </small>
                 </div>
             </div>
@@ -35,11 +35,11 @@
             <div class="card text-center h-100 shadow-sm border-info">
                 <div class="card-body">
                     <i class="fas fa-briefcase text-info fs-1 mb-3"></i>
-                    <h4 class="card-title">{{ stats.total_jobs }}</h4>
+                    <h4 class="card-title">{{ stats.total_jobs or 0 }}</h4>
                     <p class="card-text text-muted">Active Jobs</p>
                     <small class="text-success">
                         <i class="fas fa-arrow-up"></i>
-                        {{ stats.new_jobs_this_month }} this month
+                        {{ stats.new_jobs_this_month or 0 }} this month
                     </small>
                 </div>
             </div>
@@ -48,11 +48,11 @@
             <div class="card text-center h-100 shadow-sm border-warning">
                 <div class="card-body">
                     <i class="fas fa-paper-plane text-warning fs-1 mb-3"></i>
-                    <h4 class="card-title">{{ stats.total_applications }}</h4>
+                    <h4 class="card-title">{{ stats.total_applications or 0 }}</h4>
                     <p class="card-text text-muted">Applications</p>
                     <small class="text-success">
                         <i class="fas fa-arrow-up"></i>
-                        {{ stats.new_applications_this_month }} this month
+                        {{ stats.new_applications_this_month or 0 }} this month
                     </small>
                 </div>
             </div>
@@ -61,10 +61,10 @@
             <div class="card text-center h-100 shadow-sm border-success">
                 <div class="card-body">
                     <i class="fas fa-building text-success fs-1 mb-3"></i>
-                    <h4 class="card-title">{{ stats.total_employers }}</h4>
+                    <h4 class="card-title">{{ stats.total_employers or 0 }}</h4>
                     <p class="card-text text-muted">Employers</p>
                     <small class="text-info">
-                        {{ stats.active_employers }} active
+                        {{ stats.active_employers or 0 }} active
                     </small>
                 </div>
             </div>
@@ -93,28 +93,34 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for user in stats.recent_users %}
-                                <tr>
-                                    <td>{{ user.username }}</td>
-                                    <td>
-                                        {% if user.role == 'seeker' %}
-                                            <span class="badge bg-info">Seeker</span>
-                                        {% elif user.role == 'employer' %}
-                                            <span class="badge bg-success">Employer</span>
-                                        {% elif user.role == 'admin' %}
-                                            <span class="badge bg-danger">Admin</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ user.created_at.strftime('%m/%d/%Y') }}</td>
-                                    <td>
-                                        {% if user.is_active %}
-                                            <span class="badge bg-success">Active</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">Inactive</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
+                                {% if stats.recent_users %}
+                                    {% for user in stats.recent_users %}
+                                    <tr>
+                                        <td>{{ user.username }}</td>
+                                        <td>
+                                            {% if user.role == 'seeker' %}
+                                                <span class="badge bg-info">Seeker</span>
+                                            {% elif user.role == 'employer' %}
+                                                <span class="badge bg-success">Employer</span>
+                                            {% elif user.role == 'admin' %}
+                                                <span class="badge bg-danger">Admin</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user.created_at.strftime('%m/%d/%Y') }}</td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No recent users</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -145,16 +151,22 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for job in stats.recent_jobs %}
-                                <tr>
-                                    <td>{{ job.title[:30] }}...</td>
-                                    <td>{{ job.company_name or 'N/A' }}</td>
-                                    <td>{{ job.posted_date.strftime('%m/%d/%Y') }}</td>
-                                    <td>
-                                        <span class="badge bg-info">{{ job.application_count or 0 }}</span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
+                                {% if stats.recent_jobs %}
+                                    {% for job in stats.recent_jobs %}
+                                    <tr>
+                                        <td>{{ job.title[:30] }}{% if job.title|length > 30 %}...{% endif %}</td>
+                                        <td>{{ job.company_name }}</td>
+                                        <td>{{ job.posted_date.strftime('%m/%d/%Y') }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ job.application_count }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No recent jobs</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -179,15 +191,15 @@
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-md-4">
-                            <h4 class="text-primary">{{ stats.applications_today }}</h4>
+                            <h4 class="text-primary">{{ stats.applications_today or 0 }}</h4>
                             <p class="text-muted">Applications Today</p>
                         </div>
                         <div class="col-md-4">
-                            <h4 class="text-success">{{ stats.jobs_posted_today }}</h4>
+                            <h4 class="text-success">{{ stats.jobs_posted_today or 0 }}</h4>
                             <p class="text-muted">Jobs Posted Today</p>
                         </div>
                         <div class="col-md-4">
-                            <h4 class="text-info">{{ stats.new_users_today }}</h4>
+                            <h4 class="text-info">{{ stats.new_users_today or 0 }}</h4>
                             <p class="text-muted">New Users Today</p>
                         </div>
                     </div>

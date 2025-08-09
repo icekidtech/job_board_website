@@ -64,6 +64,14 @@ def create_app():
     from app.routes import main
     app.register_blueprint(main)
     
+    # Add custom Jinja2 filter for line breaks
+    @app.template_filter('nl2br')
+    def nl2br_filter(text):
+        """Convert newlines to HTML line breaks"""
+        if text:
+            return text.replace('\n', '<br>')
+        return text
+    
     # Test database connection on app creation
     print("Testing database connection...")
     if test_database_connection():

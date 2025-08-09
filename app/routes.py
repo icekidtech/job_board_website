@@ -277,12 +277,29 @@ def seeker_dashboard():
         flash('User session expired. Please log in again.', 'error')
         return redirect(url_for('main.login'))
     
-    # Get applied jobs (placeholder data for now)
-    applied_jobs = current_user.get_applied_jobs()
-    
-    return render_template('seeker_dashboard.html', 
-                         applied_jobs=applied_jobs,
-                         user=current_user)
+    try:
+        # Get applied jobs with real data from database
+        applied_jobs = current_user.get_applied_jobs()
+        
+        # Calculate statistics
+        total_applications = len(applied_jobs)
+        pending_count = len([app for app in applied_jobs if app.get('status') == 'pending'])
+        reviewed_count = len([app for app in applied_jobs if app.get('status') == 'reviewed'])
+        accepted_count = len([app for app in applied_jobs if app.get('status') == 'accepted'])
+        rejected_count = len([app for app in applied_jobs if app.get('status') == 'rejected'])
+        
+        return render_template('seeker_dashboard.html', 
+                             applied_jobs=applied_jobs,
+                             user=current_user,
+                             total_applications=total_applications,
+                             pending_count=pending_count,
+                             reviewed_count=reviewed_count,
+                             accepted_count=accepted_count,
+                             rejected_count=rejected_count)
+                             
+    except Exception as e:
+        flash('Error loading dashboard data. Please try again.', 'error')
+        return redirect(url_for('main.home'))
 
 @main.route('/employer_dashboard')
 def employer_dashboard():
@@ -303,14 +320,31 @@ def employer_dashboard():
         flash('User session expired. Please log in again.', 'error')
         return redirect(url_for('main.login'))
     
-    # Get posted jobs and applications (placeholder data for now)
-    posted_jobs = current_user.get_posted_jobs()
-    recent_applications = current_user.get_recent_applications()
-    
-    return render_template('employer_dashboard.html',
-                         posted_jobs=posted_jobs,
-                         recent_applications=recent_applications,
-                         user=current_user)
+    try:
+        # Get posted jobs and applications with real data from database
+        posted_jobs = current_user.get_posted_jobs()
+        recent_applications = current_user.get_recent_applications()
+        
+        # Calculate statistics
+        total_jobs = len(posted_jobs)
+        active_jobs = len([job for job in posted_jobs if job.get('is_active', True)])
+        total_applications = sum(job.get('application_count', 0) for job in posted_jobs)
+        pending_applications = len([app for app in recent_applications if app.get('status') == 'pending'])
+        total_views = sum(job.get('view_count', 0) for job in posted_jobs)
+        
+        return render_template('employer_dashboard.html',
+                             posted_jobs=posted_jobs,
+                             recent_applications=recent_applications,
+                             user=current_user,
+                             total_jobs=total_jobs,
+                             active_jobs=active_jobs,
+                             total_applications=total_applications,
+                             pending_applications=pending_applications,
+                             total_views=total_views)
+                             
+    except Exception as e:
+        flash('Error loading dashboard data. Please try again.', 'error')
+        return redirect(url_for('main.home'))
 
 @main.route('/admin_dashboard')
 def admin_dashboard():
@@ -320,17 +354,22 @@ def admin_dashboard():
         flash('Please log in to access the admin dashboard.', 'error')
         return redirect(url_for('main.login'))
     
-    # Check if user is an admin (you'll need to add admin role to your system)
+    # Check if user is an admin
     if session.get('user_role') != 'admin':
         flash('Access denied. Admin privileges required.', 'error')
         return redirect(url_for('main.home'))
     
-    # Get system overview (placeholder data for now)
-    system_stats = User.get_system_overview()
-    
-    return render_template('admin_dashboard.html',
-                         stats=system_stats,
-                         user=get_current_user())
+    try:
+        # Get system overview with real data from database
+        system_stats = User.get_system_overview()
+        
+        return render_template('admin_dashboard.html',
+                             stats=system_stats,
+                             user=get_current_user())
+                             
+    except Exception as e:
+        flash('Error loading admin dashboard data. Please try again.', 'error')
+        return redirect(url_for('main.home'))
 
 # Utility function to check if user is logged in
 def is_logged_in():
