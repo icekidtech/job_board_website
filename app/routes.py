@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from app.models import db, User, JobPosting, Application
+from werkzeug.security import check_password_hash
 
 # Create a blueprint for main routes
 main = Blueprint('main', __name__)
@@ -370,6 +371,137 @@ def admin_dashboard():
     except Exception as e:
         flash('Error loading admin dashboard data. Please try again.', 'error')
         return redirect(url_for('main.home'))
+
+@main.route('/profile')
+def profile():
+    """User profile view - displays current user's profile information"""
+    # Check if user is logged in
+    if not is_logged_in():
+        flash('Please log in to access your profile.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Get current user
+    current_user = get_current_user()
+    if not current_user:
+        flash('User session expired. Please log in again.', 'error')
+        return redirect(url_for('main.login'))
+    
+    try:
+        # Get additional profile data
+        profile_data = current_user.get_profile_data()
+        
+        return render_template('profile.html', 
+                             user=current_user,
+                             profile_data=profile_data)
+                             
+    except Exception as e:
+        flash('Error loading profile data. Please try again.', 'error')
+        return redirect(url_for('main.home'))
+
+@main.route('/profile/edit', methods=['GET', 'POST'])
+def edit_profile():
+    """Edit user profile - allows users to update their profile information"""
+    # Check if user is logged in
+    if not is_logged_in():
+        flash('Please log in to edit your profile.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Get current user
+    current_user = get_current_user()
+    if not current_user:
+        flash('User session expired. Please log in again.', 'error')
+        return redirect(url_for('main.login'))
+    
+    if request.method == 'POST':
+        # Get form data
+        new_username = request.form.get('username', '').strip()
+        new_email = request.form.get('email', '').strip()
+        current_password = request.form.get('current_password', '').strip()
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        
+        # Basic validation
+        if not new_username:
+            flash('Username is required.', 'error')
+            return render_template('edit_profile.html', user=current_user)
+        
+        if not new_email:
+            flash('Email is required.', 'error')
+            return render_template('edit_profile.html', user=current_user)
+        
+        if len(new_username) < 3:
+            flash('Username must be at least 3 characters long.', 'error')
+            return render_template('edit_profile.html', user=current_user)
+        
+        if len(new_username) > 80:
+            flash('Username must be 80 characters or less.', 'error')
+            return render_template('edit_profile.html', user=current_user)
+        
+        # Email format validation
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, new_email):
+            flash('Please enter a valid email address.', 'error')
+            return render_template('edit_profile.html', user=current_user)
+        
+        # Password validation (if user wants to change password)
+        if new_password:
+            if not current_password:
+                flash('Current password is required to change password.', 'error')
+                return render_template('edit_profile.html', user=current_user)
+            
+            if not current_user.check_password(current_password):
+                flash('Current password is incorrect.', 'error')
+                return render_template('edit_profile.html', user=current_user)
+            
+            if len(new_password) < 6:
+                flash('New password must be at least 6 characters long.', 'error')
+                return render_template('edit_profile.html', user=current_user)
+            
+            if new_password != confirm_password:
+                flash('New password and confirmation do not match.', 'error')
+                return render_template('edit_profile.html', user=current_user)
+        
+        try:
+            # Check for username uniqueness (excluding current user)
+            if new_username != current_user.username:
+                existing_user = User.query.filter_by(username=new_username).first()
+                if existing_user:
+                    flash('Username already exists. Please choose a different username.', 'error')
+                    return render_template('edit_profile.html', user=current_user)
+            
+            # Check for email uniqueness (excluding current user)
+            if new_email != current_user.email:
+                existing_email = User.query.filter_by(email=new_email).first()
+                if existing_email:
+                    flash('Email already exists. Please use a different email address.', 'error')
+                    return render_template('edit_profile.html', user=current_user)
+            
+            # Update user profile
+            update_success = current_user.update_profile(
+                username=new_username,
+                email=new_email,
+                new_password=new_password if new_password else None
+            )
+            
+            if update_success:
+                # Update session data if username changed
+                if new_username != current_user.username:
+                    session['username'] = new_username
+                
+                flash('Profile updated successfully!', 'success')
+                return redirect(url_for('main.profile'))
+            else:
+                flash('Failed to update profile. Please try again.', 'error')
+                return render_template('edit_profile.html', user=current_user)
+                
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while updating your profile. Please try again.', 'error')
+            return render_template('edit_profile.html', user=current_user)
+    
+    # GET request - display edit form
+    return render_template('edit_profile.html', user=current_user)
 
 # Utility function to check if user is logged in
 def is_logged_in():
