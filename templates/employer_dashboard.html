@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Employer Dashboard - Job Board{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-primary">
+                    <i class="fas fa-building me-2"></i>
+                    Employer Dashboard
+                </h2>
+                <span class="badge bg-success fs-6">Employer</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-briefcase text-primary fs-1 mb-3"></i>
+                    <h4 class="card-title">{{ posted_jobs|length }}</h4>
+                    <p class="card-text text-muted">Active Jobs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-users text-info fs-1 mb-3"></i>
+                    <h4 class="card-title">{{ recent_applications|length }}</h4>
+                    <p class="card-text text-muted">Total Applications</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-clock text-warning fs-1 mb-3"></i>
+                    <h4 class="card-title">{{ recent_applications|selectattr('status', 'equalto', 'pending')|list|length }}</h4>
+                    <p class="card-text text-muted">Pending Review</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-eye text-secondary fs-1 mb-3"></i>
+                    <h4 class="card-title">{{ posted_jobs|sum(attribute='view_count')|default(0) }}</h4>
+                    <p class="card-text text-muted">Total Views</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posted Jobs Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-briefcase me-2"></i>
+                        Your Job Postings
+                    </h5>
+                    <a href="{{ url_for('main.post_job') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-1"></i>
+                        Post New Job
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if posted_jobs %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Job Title</th>
+                                        <th>Posted Date</th>
+                                        <th>Applications</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for job in posted_jobs %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ job.title }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ job.job_type }} • {{ job.location or 'Remote' }}</small>
+                                        </td>
+                                        <td>{{ job.posted_date.strftime('%B %d, %Y') }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ job.application_count or 0 }}</span>
+                                        </td>
+                                        <td>
+                                            {% if job.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                                <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                                <a href="#" class="btn btn-sm btn-outline-info">Applications</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-plus-circle text-muted fs-1 mb-3"></i>
+                            <h5 class="text-muted">No Job Postings Yet</h5>
+                            <p class="text-muted">Create your first job posting to start receiving applications.</p>
+                            <a href="{{ url_for('main.post_job') }}" class="btn btn-primary">Post Your First Job</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Applications Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>
+                        Recent Applications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_applications %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Applicant</th>
+                                        <th>Job Title</th>
+                                        <th>Applied Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for application in recent_applications %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ application.applicant_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ application.applicant_email }}</small>
+                                        </td>
+                                        <td>{{ application.job_title }}</td>
+                                        <td>{{ application.application_date.strftime('%B %d, %Y') }}</td>
+                                        <td>
+                                            {% if application.status == 'pending' %}
+                                                <span class="badge bg-warning">New</span>
+                                            {% elif application.status == 'reviewed' %}
+                                                <span class="badge bg-info">Reviewed</span>
+                                            {% elif application.status == 'accepted' %}
+                                                <span class="badge bg-success">Accepted</span>
+                                            {% elif application.status == 'rejected' %}
+                                                <span class="badge bg-danger">Rejected</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="#" class="btn btn-sm btn-outline-primary">Review</a>
+                                                <a href="#" class="btn btn-sm btn-outline-success">Accept</a>
+                                                <a href="#" class="btn btn-sm btn-outline-danger">Reject</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox text-muted fs-1 mb-3"></i>
+                            <h5 class="text-muted">No Applications Yet</h5>
+                            <p class="text-muted">Applications will appear here once candidates start applying to your jobs.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
