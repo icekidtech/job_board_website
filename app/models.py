@@ -49,7 +49,7 @@ class User(db.Model):
         
         # Set default permissions based on role
         if role == 'admin':
-            self.set_permissions(self.get_default_admin_permissions())
+            self.set_permissions(self.get_default_admin_permissions)
         else:
             self.permissions = '{}'
 
@@ -417,6 +417,30 @@ class User(db.Model):
                 'recent_jobs': []
             }
 
+    def set_permissions(self, permissions_dict):
+        """Set user permissions from dictionary"""
+        import json
+        if callable(permissions_dict):
+            permissions_dict = permissions_dict()
+        self.permissions = json.dumps(permissions_dict)
+
+    def get_permissions(self):
+        """Get user permissions as dictionary"""
+        import json
+        try:
+            return json.loads(self.permissions) if self.permissions else {}
+        except (json.JSONDecodeError, TypeError):
+            return {}
+
+    def get_default_admin_permissions(self):
+        """Get default admin permissions"""
+        return {
+            'can_manage_users': True,
+            'can_manage_jobs': True,
+            'can_view_analytics': True,
+            'can_moderate_content': True
+        }
+
 
 class JobPosting(db.Model):
     """Job posting model for employer job listings"""
@@ -438,6 +462,34 @@ class JobPosting(db.Model):
     
     def __repr__(self):
         return f'<JobPosting {self.title}>'
+    
+    @staticmethod
+    def search_jobs(keyword):
+        """Search for jobs by keyword in title or description"""
+        if not keyword:
+            return []
+        
+        # Use SQLite LIKE operator for case-insensitive search
+        search_term = f"%{keyword}%"
+        
+        try:
+            jobs = JobPosting.query.filter(
+                db.and_(
+                    JobPosting.is_active == True,
+                    db.or_(
+                        JobPosting.title.like(search_term),
+                        JobPosting.description.like(search_term),
+                        JobPosting.company_name.like(search_term),
+                        JobPosting.location.like(search_term)
+                    )
+                )
+            ).order_by(desc(JobPosting.date_posted)).all()
+            
+            return jobs
+            
+        except Exception as e:
+            print(f"Search error: {e}")
+            return []
 
 class Application(db.Model):
     """Application model for job applications"""

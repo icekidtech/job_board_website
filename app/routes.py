@@ -709,6 +709,23 @@ def edit_profile():
     # GET request - display edit form
     return render_template('edit_profile.html', user=current_user)
 
+@main.route('/search', methods=['GET', 'POST'])
+def search():
+    """Job search route - allows users to search for jobs by keyword"""
+    query = request.args.get('q', '').strip()
+    jobs = []
+    
+    if query:
+        try:
+            # Get search results from the model
+            jobs = JobPosting.search_jobs(query)
+            flash(f'Found {len(jobs)} job(s) matching "{query}"', 'info')
+        except Exception as e:
+            flash('An error occurred while searching. Please try again.', 'error')
+            jobs = []
+    
+    return render_template('jobs.html', jobs=jobs, search_query=query, is_search=True)
+
 # Utility function to check if user is logged in
 def is_logged_in():
     """Check if user is currently logged in"""
