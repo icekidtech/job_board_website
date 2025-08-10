@@ -1,4 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
+from app import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
@@ -14,21 +14,21 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    password = db.Column(db.String(255), nullable=False)  # Will store hashed password
-    role = db.Column(db.String(20), nullable=False, default='seeker')  # Changed from Enum for SQLite
+    password = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='seeker')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     
-    # Profile fields (new)
+    # Profile fields
     full_name = db.Column(db.String(100), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
     location = db.Column(db.String(100), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     
-    # Add permissions field to store JSON data
-    permissions = db.Column(db.Text, default='{}')  # JSON field for permissions
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Admin who created this user
+    # Admin permissions fields - now properly integrated
+    permissions = db.Column(db.Text, default='{}')
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Fixed: should reference 'users.id'
     
     # Relationships
     job_postings = db.relationship('JobPosting', backref='employer', lazy=True, foreign_keys='JobPosting.employer_id')
@@ -38,7 +38,7 @@ class User(db.Model):
         """Initialize user with enhanced fields"""
         self.username = username
         self.email = email
-        self.set_password(password)  # Hash the password
+        self.set_password(password)
         self.role = role
         self.full_name = full_name
         self.phone = phone
@@ -48,10 +48,12 @@ class User(db.Model):
         self.is_active = True
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
-    
+        
         # Set default permissions based on role
         if role == 'admin':
-            self.set_permissions(self.get_default_permissions())
+            self.set_permissions(self.get_default_admin_permissions())
+        else:
+            self.permissions = '{}'
 
     def check_password(self, password):
         """Check if provided password matches the stored hash"""

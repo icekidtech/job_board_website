@@ -20,6 +20,67 @@ A simple job board website built with Python Flask, HTML, CSS, JavaScript, and S
 - **Modern UI**: Responsive design with Bootstrap 5, animations, and interactive components
 - **Enhanced UX**: Real-time form validation, loading states, and smooth animations
 
+## Admin Management System
+
+The application now includes comprehensive admin management capabilities with **hardcoded permissions in the User model**:
+
+### Admin Features
+- **Admin Dashboard**: System overview with real-time statistics, user distribution, and health monitoring
+- **Permission Management**: Granular permission system hardcoded into the User model for:
+    - `manage_users`: User account management
+    - `manage_jobs`: Job posting oversight  
+    - `manage_applications`: Application review
+    - `view_reports`: System analytics access
+    - `system_settings`: Configuration management
+- **Admin Creation**: Secure interface for existing admins to create new administrators
+- **Security Features**: Role-based access control, input validation, and secure session management
+
+### Creating Your First Admin
+
+**Option 1: Quick Admin Creation Script**
+```python
+# Create initial admin user
+from app import create_app
+from app.models import db, User
+
+app = create_app()
+with app.app_context():
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+                admin = User(
+                        username='admin',
+                        email='admin@jobboard.com', 
+                        password='admin123',  # Change this!
+                        role='admin'
+                )
+                db.session.add(admin)
+                db.session.commit()
+                print("Admin created: admin / admin123")
+```
+
+**Option 2: Register as Admin**
+1. Register a normal account through `/register`
+2. Manually update the database to change role to 'admin'
+3. The permission system will automatically activate
+
+### Admin Permissions Integration
+
+The admin system is **fully integrated into the User model** with these benefits:
+
+✅ **No Migration Scripts**: SQLAlchemy handles schema automatically  
+✅ **Integrated Security**: Permissions are part of the core user system  
+✅ **Simple Deployment**: No separate database migration files  
+✅ **Backward Compatible**: Existing users work without changes  
+✅ **JSON Permissions**: Flexible permission storage in text field  
+
+### Admin Routes
+
+- `/admin/dashboard` - System overview and statistics
+- `/admin/create-admin` - Create new admin users (admin only)
+- Permission checking integrated throughout the application
+
+See the [detailed documentation](docs/detailed_explanation.md#admin-dashboard-and-permission-management) for complete admin system specifications, security implementation details, and permission management information.
+
 ## Dashboard Features
 
 The application includes comprehensive role-based dashboards that provide personalized user experiences:
@@ -158,4 +219,3 @@ This project is open source and available under the [MIT License](LICENSE).
 ## Support
 
 For questions or issues, please check the [detailed documentation](docs/detailed_explanation.md) or open an issue in the project repository.
-

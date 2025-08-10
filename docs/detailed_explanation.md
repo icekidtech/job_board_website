@@ -12,8 +12,9 @@
 9. [Real Data Integration](#real-data-integration)
 10. [API Endpoints](#api-endpoints)
 11. [Profile Management System](#profile-management-system)
-12. [Development Guidelines](#development-guidelines)
-13. [User Interface Design](#user-interface-design)
+12. [Admin Dashboard and Permission Management](#admin-dashboard-and-permission-management)
+13. [Development Guidelines](#development-guidelines)
+14. [User Interface Design](#user-interface-design)
 
 ## Project Overview
 
@@ -129,6 +130,7 @@ python app/__init__.py
 ```
 
 ### 5. Run the Application
+
 ```bash
 # Start the Flask development server
 python run.py
@@ -136,6 +138,32 @@ python run.py
 # Alternative: using Flask CLI
 flask run
 ```
+
+### 6. Create Admin User (Optional)
+
+To access admin features, create an admin user:
+
+```bash
+# Create admin script
+python -c "
+from app import create_app
+from app.models import db, User
+
+app = create_app()
+with app.app_context():
+        admin = User(
+                username='admin',
+                email='admin@jobboard.com',
+                password='admin123',
+                role='admin'
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print('Admin created: admin / admin123')
+"
+```
+
+**Important**: Change the default password after first login!
 
 ## Database Schema
 
@@ -151,9 +179,9 @@ The job board application uses three main tables to manage users, job postings, 
 
 ```
 users (1) ----< job_postings (1) ----< applications (n)
-    |                                         ^
-    |                                         |
-    +----------- seeker_id ------------------+
+                |                                         ^
+                |                                         |
+                +----------- seeker_id ------------------+
 ```
 
 ## Database Models
@@ -263,19 +291,19 @@ create_tables(app)  # Creates all tables if they don't exist
 ```python
 # Create a new employer
 employer = User(username='techcorp', email='hr@techcorp.com', 
-                                password='secure123', role='employer')
+                                                                                                                                password='secure123', role='employer')
 
 # Create a job posting
 job = JobPosting(title='Software Developer', 
-                                description='Python developer needed...',
-                                employer_id=employer.id,
-                                company_name='TechCorp Inc.',
-                                location='Remote',
-                                job_type='full-time')
+                                                                                                                                description='Python developer needed...',
+                                                                                                                                employer_id=employer.id,
+                                                                                                                                company_name='TechCorp Inc.',
+                                                                                                                                location='Remote',
+                                                                                                                                job_type='full-time')
 
 # Create an application
 application = Application(job_id=job.id, seeker_id=seeker.id,
-                                                 cover_letter='I am interested...')
+                                                                                                                                                                                                 cover_letter='I am interested...')
 ```
 
 ## Authentication System
@@ -385,28 +413,28 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 ```python
 @main.app_template_global()
 def current_user():
-        """Get current logged-in user object"""
-        if 'user_id' in session:
-                return User.query.get(session['user_id'])
-        return None
+                                """Get current logged-in user object"""
+                                if 'user_id' in session:
+                                                                return User.query.get(session['user_id'])
+                                return None
 
 @main.app_template_global()
 def logged_in():
-        """Check if user is currently logged in"""
-        return 'user_id' in session
+                                """Check if user is currently logged in"""
+                                return 'user_id' in session
 ```
 
 **Route Helper Functions**:
 ```python
 def is_logged_in():
-        """Check if user is currently logged in"""
-        return 'user_id' in session
+                                """Check if user is currently logged in"""
+                                return 'user_id' in session
 
 def get_current_user():
-        """Get current logged-in user object"""
-        if is_logged_in():
-                return User.query.get(session['user_id'])
-        return None
+                                """Get current logged-in user object"""
+                                if is_logged_in():
+                                                                return User.query.get(session['user_id'])
+                                return None
 ```
 
 ### User Interface Integration
@@ -422,8 +450,8 @@ The navigation bar dynamically changes based on authentication status:
 - User dropdown with username and role badge
 - Profile link (placeholder)
 - Role-specific links:
-    - Employers: "Post Job"
-    - Seekers: "My Applications"
+                - Employers: "Post Job"
+                - Seekers: "My Applications"
 - Logout link
 
 #### Flash Message System
@@ -460,16 +488,16 @@ The User model provides essential authentication methods:
 
 ```python
 def __init__(self, username, email, password, role='seeker'):
-        """Initialize user with hashed password"""
-        self.password = generate_password_hash(password)
+                                """Initialize user with hashed password"""
+                                self.password = generate_password_hash(password)
 
 def check_password(self, password):
-        """Verify password against stored hash"""
-        return check_password_hash(self.password, password)
+                                """Verify password against stored hash"""
+                                return check_password_hash(self.password, password)
 
 def set_password(self, password):
-        """Update user password with new hash"""
-        self.password = generate_password_hash(password)
+                                """Update user password with new hash"""
+                                self.password = generate_password_hash(password)
 ```
 
 #### User Registration Flow
@@ -566,57 +594,57 @@ The application uses Flask blueprints to organize routes in [`app/routes.py`](ap
 - **Purpose**: Landing page with overview and statistics
 - **Template**: [`templates/home.html`](templates/home.html)
 - **Features**:
-    - Displays total number of active jobs and users
-    - Welcome message and platform overview
-    - Feature highlights and call-to-action buttons
-    - Responsive design with Bootstrap components
+                - Displays total number of active jobs and users
+                - Welcome message and platform overview
+                - Feature highlights and call-to-action buttons
+                - Responsive design with Bootstrap components
 
 #### Job Listings Route (`/jobs`)
 - **Purpose**: Browse and search available job postings
 - **Template**: [`templates/jobs.html`](templates/jobs.html)
 - **Features**:
-    - Paginated job listings (10 per page)
-    - Search and filter functionality
-    - Job cards with key information (title, company, location, type)
-    - Responsive grid layout
-    - "No results" state handling
+                - Paginated job listings (10 per page)
+                - Search and filter functionality
+                - Job cards with key information (title, company, location, type)
+                - Responsive grid layout
+                - "No results" state handling
 
 #### Login Route (`/login`)
 - **Purpose**: User authentication form
 - **Template**: [`templates/login.html`](templates/login.html)
 - **Features**:
-    - Email and password input fields
-    - "Remember me" checkbox
-    - Links to registration and password recovery
-    - Form validation and error handling
+                - Email and password input fields
+                - "Remember me" checkbox
+                - Links to registration and password recovery
+                - Form validation and error handling
 
 #### Registration Route (`/register`)
 - **Purpose**: New user account creation
 - **Template**: [`templates/register.html`](templates/register.html)
 - **Features**:
-    - Username, email, and password fields
-    - Role selection (job seeker or employer)
-    - Password confirmation
-    - Terms of service agreement
+                - Username, email, and password fields
+                - Role selection (job seeker or employer)
+                - Password confirmation
+                - Terms of service agreement
 
 #### About Route (`/about`)
 - **Purpose**: Information about the platform
 - **Template**: [`templates/about.html`](templates/about.html)
 - **Features**:
-    - Mission statement and platform overview
-    - How-it-works explanation
-    - Call-to-action buttons
+                - Mission statement and platform overview
+                - How-it-works explanation
+                - Call-to-action buttons
 
 ### Template Architecture
 
 #### Base Template ([`templates/base.html`](templates/base.html))
 - **Purpose**: Common layout and structure for all pages
 - **Features**:
-    - Responsive navigation bar with brand and menu items
-    - Flash message display system
-    - Bootstrap 5 integration
-    - Footer with copyright information
-    - JavaScript and CSS includes
+                - Responsive navigation bar with brand and menu items
+                - Flash message display system
+                - Bootstrap 5 integration
+                - Footer with copyright information
+                - JavaScript and CSS includes
 
 #### Template Inheritance
 All page templates extend the base template using Jinja2 inheritance:
@@ -739,21 +767,21 @@ The Job Board website includes role-based dashboards that provide users with per
 **User Model Extensions**:
 ```python
 def get_applied_jobs(self):
-        """Retrieve job applications for seeker dashboards"""
-        # Returns list of applications with job details and status
+                                """Retrieve job applications for seeker dashboards"""
+                                # Returns list of applications with job details and status
 
 def get_posted_jobs(self):
-        """Retrieve posted jobs for employer dashboards"""  
-        # Returns list of jobs with application counts and metrics
+                                """Retrieve posted jobs for employer dashboards"""  
+                                # Returns list of jobs with application counts and metrics
 
 def get_recent_applications(self):
-        """Retrieve recent applications for employer dashboards"""
-        # Returns list of applications for employer's jobs
+                                """Retrieve recent applications for employer dashboards"""
+                                # Returns list of applications for employer's jobs
 
 @staticmethod
 def get_system_overview():
-        """Retrieve system statistics for admin dashboard"""
-        # Returns comprehensive system metrics and recent activity
+                                """Retrieve system statistics for admin dashboard"""
+                                # Returns comprehensive system metrics and recent activity
 ```
 
 #### Placeholder Data Implementation
@@ -815,17 +843,17 @@ The dashboard data methods use SQLAlchemy ORM for efficient and secure database 
 ```python
 # Example: Job seeker applied jobs query
 applications = db.session.query(
-        Application.id.label('application_id'),
-        Application.application_date,
-        Application.status,
-        JobPosting.title.label('job_title'),
-        JobPosting.company_name
+                                Application.id.label('application_id'),
+                                Application.application_date,
+                                Application.status,
+                                JobPosting.title.label('job_title'),
+                                JobPosting.company_name
 ).join(
-        JobPosting, Application.job_id == JobPosting.id
+                                JobPosting, Application.job_id == JobPosting.id
 ).filter(
-        Application.seeker_id == self.id
+                                Application.seeker_id == self.id
 ).order_by(
-        desc(Application.application_date)
+                                desc(Application.application_date)
 ).all()
 ```
 
@@ -873,14 +901,14 @@ accepted_count = len([app for app in applied_jobs if app.get('status') == 'accep
 **Data Structure**:
 ```python
 {
-        'application_id': int,
-        'job_title': str,
-        'company_name': str,
-        'location': str,
-        'job_type': str,
-        'application_date': datetime,
-        'status': str,
-        'cover_letter': str
+                                'application_id': int,
+                                'job_title': str,
+                                'company_name': str,
+                                'location': str,
+                                'job_type': str,
+                                'application_date': datetime,
+                                'status': str,
+                                'cover_letter': str
 }
 ```
 
@@ -896,13 +924,13 @@ accepted_count = len([app for app in applied_jobs if app.get('status') == 'accep
 **Data Structure**:
 ```python
 {
-        'id': int,
-        'title': str,
-        'company_name': str,
-        'location': str,
-        'posted_date': datetime,
-        'is_active': bool,
-        'application_count': int
+                                'id': int,
+                                'title': str,
+                                'company_name': str,
+                                'location': str,
+                                'posted_date': datetime,
+                                'is_active': bool,
+                                'application_count': int
 }
 ```
 
@@ -932,25 +960,25 @@ Templates now use Jinja2 loops and conditionals to display real data:
 
 ```html
 {% if applied_jobs %}
-        {% for application in applied_jobs %}
-        <tr>
-                <td>{{ application.job_title }}</td>
-                <td>{{ application.company_name }}</td>
-                <td>{{ application.application_date.strftime('%B %d, %Y') }}</td>
-                <td>
-                        {% if application.status == 'pending' %}
-                                <span class="badge bg-warning">Pending</span>
-                        {% elif application.status == 'accepted' %}
-                                <span class="badge bg-success">Accepted</span>
-                        {% endif %}
-                </td>
-        </tr>
-        {% endfor %}
+                                {% for application in applied_jobs %}
+                                <tr>
+                                                                <td>{{ application.job_title }}</td>
+                                                                <td>{{ application.company_name }}</td>
+                                                                <td>{{ application.application_date.strftime('%B %d, %Y') }}</td>
+                                                                <td>
+                                                                                                {% if application.status == 'pending' %}
+                                                                                                                                <span class="badge bg-warning">Pending</span>
+                                                                                                {% elif application.status == 'accepted' %}
+                                                                                                                                <span class="badge bg-success">Accepted</span>
+                                                                                                {% endif %}
+                                                                </td>
+                                </tr>
+                                {% endfor %}
 {% else %}
-        <div class="text-center py-5">
-                <h5 class="text-muted">No Applications Yet</h5>
-                <p class="text-muted">Start applying for jobs to see them here.</p>
-        </div>
+                                <div class="text-center py-5">
+                                                                <h5 class="text-muted">No Applications Yet</h5>
+                                                                <p class="text-muted">Start applying for jobs to see them here.</p>
+                                </div>
 {% endif %}
 ```
 
@@ -1091,16 +1119,16 @@ DATABASE_PATH = PROJECT_ROOT / 'job_board.db'
 **Profile Data Structure**:
 ```python
 {
-        'username': str,
-        'email': str,
-        'role': str,
-        'full_name': str,
-        'phone': str,
-        'location': str,
-        'bio': str,
-        'created_at': datetime,
-        'updated_at': datetime,
-        'is_active': bool
+                                'username': str,
+                                'email': str,
+                                'role': str,
+                                'full_name': str,
+                                'phone': str,
+                                'location': str,
+                                'bio': str,
+                                'created_at': datetime,
+                                'updated_at': datetime,
+                                'is_active': bool
 }
 ```
 
@@ -1128,9 +1156,9 @@ DATABASE_PATH = PROJECT_ROOT / 'job_board.db'
 **Completion Calculation**:
 ```python
 def get_profile_completion_percentage(self):
-        fields = [username, email, full_name, phone, location, bio]
-        completed_fields = sum(1 for field in fields if field and field.strip())
-        return int((completed_fields / len(fields)) * 100)
+                                fields = [username, email, full_name, phone, location, bio]
+                                completed_fields = sum(1 for field in fields if field and field.strip())
+                                return int((completed_fields / len(fields)) * 100)
 ```
 
 **Visual Indicators**:
@@ -1145,25 +1173,25 @@ def get_profile_completion_percentage(self):
 **get_profile_data()**: Returns formatted profile data for template display
 ```python
 def get_profile_data(self):
-        return {
-                'id': self.id,
-                'username': self.username,
-                'email': self.email,
-                'role_display': 'Job Seeker' if self.role == 'seeker' else 'Employer',
-                # ... additional formatted fields
-        }
+                                return {
+                                                                'id': self.id,
+                                                                'username': self.username,
+                                                                'email': self.email,
+                                                                'role_display': 'Job Seeker' if self.role == 'seeker' else 'Employer',
+                                                                # ... additional formatted fields
+                                }
 ```
 
 **update_profile()**: Secure profile update with transaction safety
 ```python
 def update_profile(self, username=None, email=None, new_password=None, ...):
-        try:
-                # Update fields with validation
-                # Commit changes
-                return True
-        except Exception:
-                db.session.rollback()
-                return False
+                                try:
+                                                                # Update fields with validation
+                                                                # Commit changes
+                                                                return True
+                                except Exception:
+                                                                db.session.rollback()
+                                                                return False
 ```
 
 **get_profile_completion_percentage()**: Calculate profile completeness
@@ -1282,6 +1310,189 @@ is_active BOOLEAN NOT NULL DEFAULT 1
 - **Verification Badges**: Email and phone verification
 
 The profile management system provides a comprehensive foundation for user account management while maintaining security, usability, and performance standards suitable for a professional job board platform.
+
+## Admin Dashboard and Permission Management
+
+### Overview
+
+The Job Board website includes a comprehensive admin management system with role-based permissions and secure admin creation capabilities. The admin functionality is **hardcoded directly into the User model** for simplicity and to avoid migration issues.
+
+### Admin Dashboard Features
+
+#### System Overview Dashboard
+- **User Statistics**: Total users, role distribution, and activity metrics
+- **Job Management**: Total jobs, recent postings, and application trends
+- **Application Monitoring**: Application counts, status tracking, and recent activity
+- **System Health**: Database status, performance metrics, and activity logs
+
+#### Admin Creation Interface
+- **Secure Admin Registration**: Create new admin users with specific permissions
+- **Permission Assignment**: Granular permission control for different admin functions
+- **Validation and Security**: Input validation, permission verification, and secure processing
+
+### Database Schema Updates
+
+#### Enhanced User Model
+
+The User model has been enhanced with admin permissions functionality:
+
+**New Fields**:
+```python
+permissions = db.Column(db.Text, default='{}')  # JSON-stored permissions
+created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Admin creator tracking
+```
+
+**Admin Permission Methods**:
+```python
+def get_default_admin_permissions(self):
+        """Get default permissions for admin users"""
+        return {
+                'manage_users': True,
+                'manage_jobs': True,
+                'manage_applications': True,
+                'view_reports': True,
+                'system_settings': True
+        }
+
+def set_permissions(self, permissions_dict):
+        """Set user permissions from dictionary"""
+        self.permissions = json.dumps(permissions_dict)
+
+def get_permissions(self):
+        """Get user permissions as dictionary"""
+        try:
+                return json.loads(self.permissions or '{}')
+        except:
+                return {}
+
+def has_permission(self, permission):
+        """Check if user has specific permission"""
+        if self.role != 'admin':
+                return False
+        permissions = self.get_permissions()
+        return permissions.get(permission, False)
+
+def is_admin(self):
+        """Check if user is an admin"""
+        return self.role == 'admin'
+```
+
+### Security Implementation
+
+#### Permission-Based Access Control
+- **Role Verification**: Ensure only admin users can access admin functions
+- **Permission Checking**: Granular permission validation for specific actions
+- **Session Security**: Secure session management for admin users
+- **Input Validation**: Comprehensive validation for admin creation forms
+
+#### Admin Creation Security
+- **Authentication Required**: Only existing admins can create new admins
+- **Permission Validation**: Verify creator has admin creation permissions
+- **Secure Password Handling**: Proper password hashing and validation
+- **Audit Trail**: Track admin creation with creator information
+
+### User Interface Design
+
+#### Admin Dashboard Template
+```html
+<!-- Admin dashboard with system overview -->
+<div class="admin-dashboard">
+        <div class="stats-grid">
+                <div class="stat-card">
+                        <h3>{{ total_users }}</h3>
+                        <p>Total Users</p>
+                </div>
+                <!-- Additional stat cards -->
+        </div>
+        
+        <div class="recent-activity">
+                <!-- Recent users and jobs tables -->
+        </div>
+</div>
+```
+
+#### Admin Creation Form
+```html
+<!-- Secure admin creation form -->
+<form method="POST" class="admin-creation-form">
+        <div class="form-group">
+                <input type="text" name="username" required>
+                <input type="email" name="email" required>
+                <input type="password" name="password" required>
+        </div>
+        
+        <div class="permissions-section">
+                <!-- Permission checkboxes -->
+                <label><input type="checkbox" name="manage_users"> Manage Users</label>
+                <label><input type="checkbox" name="manage_jobs"> Manage Jobs</label>
+                <!-- Additional permissions -->
+        </div>
+</form>
+```
+
+### Admin Creation Process
+
+#### Creating Your First Admin
+
+**Method 1: Direct Database Creation**
+```python
+# Create admin user script
+from app import create_app
+from app.models import db, User
+
+app = create_app()
+with app.app_context():
+        # Check if admin exists
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+                admin = User(
+                        username='admin',
+                        email='admin@jobboard.com',
+                        password='admin123',  # Change this!
+                        role='admin'
+                )
+                db.session.add(admin)
+                db.session.commit()
+                print("Admin user created successfully!")
+```
+
+**Method 2: Application Route**
+Once you have one admin, they can create additional admins through the `/admin/create-admin` route with permission assignment.
+
+### Implementation Notes
+
+#### Benefits of Hardcoded Approach
+
+- **No Migration Required**: SQLAlchemy handles schema changes automatically
+- **Integrated Permissions**: All admin functionality is part of the core User model
+- **Consistent Naming**: Fixed table naming issues (users vs user)
+- **Simplified Deployment**: No separate migration scripts to run
+
+#### Database Compatibility
+
+- **Full SQLite3 Compatibility**: Works seamlessly with SQLite3 database
+- **JSON Permission Storage**: Flexible permission storage using JSON text field
+- **Foreign Key Relationships**: Proper relationship tracking for admin creation
+- **Backward Compatibility**: Existing users work without modification
+
+### Future Enhancements
+
+#### Planned Features
+
+- **Permission Templates**: Pre-defined permission sets for common roles
+- **Audit Logging**: Detailed logging of admin actions
+- **Bulk User Management**: Mass user operations
+- **Advanced Reporting**: Comprehensive system analytics
+- **Role Hierarchies**: Multi-level admin roles
+
+#### Security Improvements
+
+- **Two-Factor Authentication**: Enhanced admin security
+- **Session Timeout Management**: Configurable session expiration
+- **IP Whitelisting**: Geographic access restrictions
+- **Password Policies**: Enhanced password requirements
+
+The admin dashboard and permission system provides a robust foundation for secure system administration while maintaining simplicity and ease of use through direct model integration.
 
 ## Development Guidelines
 
