@@ -1,6 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+import json
+from datetime import datetime, timedelta
 
 # Initialize SQLAlchemy instance
 db = SQLAlchemy()
@@ -24,17 +26,33 @@ class User(db.Model):
     location = db.Column(db.String(100), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     
+    # Add permissions field to store JSON data
+    permissions = db.Column(db.Text, default='{}')  # JSON field for permissions
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Admin who created this user
+    
     # Relationships
     job_postings = db.relationship('JobPosting', backref='employer', lazy=True, foreign_keys='JobPosting.employer_id')
     applications = db.relationship('Application', backref='seeker', lazy=True, foreign_keys='Application.seeker_id')
     
-    def __init__(self, username, email, password, role='seeker'):
-        """Initialize user with hashed password"""
+    def __init__(self, username, email, password, role='seeker', full_name=None, phone=None, location=None, bio=None, created_by=None):
+        """Initialize user with enhanced fields"""
         self.username = username
         self.email = email
-        self.password = generate_password_hash(password)
+        self.set_password(password)  # Hash the password
         self.role = role
+        self.full_name = full_name
+        self.phone = phone
+        self.location = location
+        self.bio = bio
+        self.created_by = created_by
+        self.is_active = True
+        self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
     
+        # Set default permissions based on role
+        if role == 'admin':
+            self.set_permissions(self.get_default_permissions())
+
     def check_password(self, password):
         """Check if provided password matches the stored hash"""
         return check_password_hash(self.password, password)

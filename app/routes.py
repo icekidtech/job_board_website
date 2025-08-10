@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from app.models import db, User, JobPosting, Application
 from werkzeug.security import check_password_hash
 from datetime import datetime
+import json
 
 # Create a blueprint for main routes
 main = Blueprint('main', __name__)
@@ -348,9 +349,10 @@ def employer_dashboard():
         flash('Error loading dashboard data. Please try again.', 'error')
         return redirect(url_for('main.home'))
 
+@main.route('/admin')
 @main.route('/admin_dashboard')
 def admin_dashboard():
-    """Admin dashboard - displays system overview and statistics"""
+    """Admin dashboard - displays system overview and management options"""
     # Check if user is logged in
     if not is_logged_in():
         flash('Please log in to access the admin dashboard.', 'error')
@@ -361,17 +363,191 @@ def admin_dashboard():
         flash('Access denied. Admin privileges required.', 'error')
         return redirect(url_for('main.home'))
     
+    # Get current user and check permissions
+    current_user = get_current_user()
+    if not current_user:
+        flash('User session expired. Please log in again.', 'error')
+        return redirect(url_for('main.login'))
+    
     try:
         # Get system overview with real data from database
         system_stats = User.get_system_overview()
         
-        return render_template('admin_dashboard.html',
+        # Get admin-specific data
+        admin_data = {
+            'total_admins': User.get_admin_count(),
+            'recent_admin_activities': User.get_recent_admin_activities(),
+            'system_health': {
+                'database_status': 'Connected',
+                'last_backup': 'Not configured',
+                'active_sessions': len([u for u in User.get_active_users() if u.get('is_active')])
+            }
+        }
+        
+        return render_template('admin.html',
                              stats=system_stats,
-                             user=get_current_user())
+                             admin_data=admin_data,
+                             user=current_user,
+                             user_permissions=current_user.get_permissions())
                              
     except Exception as e:
         flash('Error loading admin dashboard data. Please try again.', 'error')
         return redirect(url_for('main.home'))
+
+@main.route('/admin/create_admin', methods=['GET', 'POST'])
+def create_admin():
+    """Create new admin - allows existing admins to create new administrators"""
+    # Check if user is logged in
+    if not is_logged_in():
+        flash('Please log in to access admin creation.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Check if user is an admin
+    if session.get('user_role') != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Get current user and check permissions
+    current_user = get_current_user()
+    if not current_user:
+        flash('User session expired. Please log in again.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Check if user has permission to manage users
+    user_permissions = current_user.get_permissions()
+    if not user_permissions.get('manage_users', False):
+        flash('Access denied. You do not have permission to create admins.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+    
+    if request.method == 'POST':
+        # Get form data
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        
+        # Get permissions from checkboxes
+        permissions = {
+            'manage_users': 'manage_users' in request.form,
+            'manage_jobs': 'manage_jobs' in request.form,
+            'manage_applications': 'manage_applications' in request.form,
+            'view_reports': 'view_reports' in request.form,
+            'system_settings': 'system_settings' in request.form
+        }
+        
+        # Basic validation
+        if not username:
+            flash('Username is required.', 'error')
+            return render_template('create_admin.html', user=current_user)
+        
+        if not email:
+            flash('Email is required.', 'error')
+            return render_template('create_admin.html', user=current_user)
+        
+        if not password:
+            flash('Password is required.', 'error')
+            return render_template('create_admin.html', user=current_user)
+        
+        if len(username) < 3:
+            flash('Username must be at least 3 characters long.', 'error')
+            return render_template('create_admin.html', user=current_user)
+        
+        if len(username) > 80:
+            flash('Username must be 80 characters or less.', 'error')
+            return render_template('create_admin.html', user=current_user)
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters long.', 'error')
+            return render_template('create_admin.html', user=current_user)
+        
+        if password != confirm_password:
+            flash('Password and confirmation do not match.', 'error')
+            return render_template('create_admin.html', user=current_user)
+        
+        # Email format validation
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            flash('Please enter a valid email address.', 'error')
+            return render_template('create_admin.html', user=current_user)
+        
+        # Check for at least one permission
+        if not any(permissions.values()):
+            flash('Please assign at least one permission to the new admin.', 'error')
+            return render_template('create_admin.html', user=current_user)
+        
+        try:
+            # Check for existing username and email
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user:
+                flash('Username already exists. Please choose a different username.', 'error')
+                return render_template('create_admin.html', user=current_user)
+            
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email:
+                flash('Email already exists. Please use a different email address.', 'error')
+                return render_template('create_admin.html', user=current_user)
+            
+            # Create new admin user
+            success = User.create_admin(
+                username=username,
+                email=email,
+                password=password,
+                permissions=permissions,
+                full_name=full_name if full_name else None,
+                created_by=current_user.id
+            )
+            
+            if success:
+                flash(f'Admin "{username}" created successfully with assigned permissions!', 'success')
+                return redirect(url_for('main.admin_dashboard'))
+            else:
+                flash('Failed to create admin. Please try again.', 'error')
+                return render_template('create_admin.html', user=current_user)
+                
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while creating the admin. Please try again.', 'error')
+            return render_template('create_admin.html', user=current_user)
+    
+    # GET request - display create admin form
+    return render_template('create_admin.html', user=current_user)
+
+@main.route('/admin/manage_users')
+def manage_users():
+    """Manage users - view and edit user accounts"""
+    # Check authentication and permissions
+    if not is_logged_in():
+        flash('Please log in to access user management.', 'error')
+        return redirect(url_for('main.login'))
+    
+    if session.get('user_role') != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.home'))
+    
+    current_user = get_current_user()
+    if not current_user:
+        flash('User session expired. Please log in again.', 'error')
+        return redirect(url_for('main.login'))
+    
+    # Check permission
+    user_permissions = current_user.get_permissions()
+    if not user_permissions.get('manage_users', False):
+        flash('Access denied. You do not have permission to manage users.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
+    
+    try:
+        # Get all users for management
+        users = User.get_all_users_for_admin()
+        
+        return render_template('manage_users.html',
+                             users=users,
+                             user=current_user)
+                             
+    except Exception as e:
+        flash('Error loading user data. Please try again.', 'error')
+        return redirect(url_for('main.admin_dashboard'))
 
 @main.route('/profile')
 def profile():
