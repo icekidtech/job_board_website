@@ -7,7 +7,13 @@ import os
 db = SQLAlchemy()
 
 def create_app():
-    app = Flask(__name__)
+    # Get the absolute path to the templates directory
+    template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
+    static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static'))
+    
+    app = Flask(__name__, 
+                template_folder=template_dir,
+                static_folder=static_dir)
     
     # Configure the app
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///job_board.db'

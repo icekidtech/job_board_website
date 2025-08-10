@@ -4,8 +4,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from datetime import datetime, timedelta
 
-# Initialize SQLAlchemy instance
-db = SQLAlchemy()
 
 class User(db.Model):
     """User model for both job seekers and employers"""
