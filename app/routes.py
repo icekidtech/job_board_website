@@ -7,16 +7,45 @@ import json
 # Create a blueprint for main routes
 main = Blueprint('main', __name__)
 
+def redirect_to_user_dashboard(user_role):
+    """Helper function to redirect users to appropriate dashboard based on role"""
+    try:
+        dashboard_routes = {
+            'seeker': 'main.seeker_dashboard',
+            'employer': 'main.employer_dashboard',
+            'admin': 'main.admin_dashboard'
+        }
+        
+        route = dashboard_routes.get(user_role)
+        if route:
+            return redirect(url_for(route))
+        else:
+            flash('Invalid user role. Please contact support.', 'error')
+            return redirect(url_for('main.home'))
+            
+    except Exception as e:
+        flash('Dashboard access error. Please try again.', 'warning')
+        return redirect(url_for('main.home'))
+
+def validate_session_and_redirect():
+    """Validate user session and redirect to appropriate dashboard if logged in"""
+    if is_logged_in():
+        user_role = session.get('user_role')
+        if user_role:
+            return redirect_to_user_dashboard(user_role)
+    return None
+
+# Update the home route to handle auto-redirect for logged-in users
 @main.route('/')
 def home():
     """Homepage route - displays welcome message and overview"""
-    # Get some basic statistics for the homepage
-    total_jobs = JobPosting.query.filter_by(is_active=True).count()
-    total_users = User.query.filter_by(is_active=True).count()
+    # Auto-redirect logged-in users to their dashboard
+    dashboard_redirect = validate_session_and_redirect()
+    if dashboard_redirect:
+        return dashboard_redirect
     
-    return render_template('home.html', 
-                         total_jobs=total_jobs, 
-                         total_users=total_users)
+    # Show homepage for non-logged-in users
+    return render_template('home.html')
 
 @main.route('/jobs')
 def jobs():
@@ -145,37 +174,68 @@ def apply_job(job_id):
 def login():
     """Login route - handles user authentication"""
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        remember_me = request.form.get('remember_me')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        remember_me = request.form.get('remember_me') == 'on'
         
-        # Validate form data
-        if not email or not password:
-            flash('Please provide both email and password.', 'error')
+        # Validate input
+        if not username or not password:
+            flash('Username and password are required.', 'error')
             return render_template('login.html')
         
-        # Find user by email
-        user = User.query.filter_by(email=email, is_active=True).first()
-        
-        if user and user.check_password(password):
-            # Login successful - create session
-            session['user_id'] = user.id
-            session['user_role'] = user.role
-            session['username'] = user.username
+        try:
+            # Find user by username or email
+            user = User.query.filter(
+                (User.username == username) | (User.email == username)
+            ).first()
             
-            # Handle "remember me" functionality
-            if remember_me:
-                session.permanent = True
-            
-            flash(f'Welcome back, {user.username}!', 'success')
-            
-            # Redirect based on user role
-            if user.role == 'employer':
-                return redirect(url_for('main.jobs'))  # Could redirect to employer dashboard
+            if user and check_password_hash(user.password, password):
+                # Store user information in session
+                session['user_id'] = user.id
+                session['username'] = user.username
+                session['user_role'] = user.role
+                session['logged_in'] = True
+                
+                # Set session timeout
+                if remember_me:
+                    session.permanent = True
+                else:
+                    session.permanent = False
+                
+                # Update last login timestamp
+                user.last_login = datetime.now()
+                db.session.commit()
+                
+                flash(f'Welcome back, {user.username}!', 'success')
+                
+                # Role-based dashboard redirection
+                try:
+                    user_role = user.role.lower()
+                    
+                    if user_role == 'seeker':
+                        return redirect(url_for('main.seeker_dashboard'))
+                    elif user_role == 'employer':
+                        return redirect(url_for('main.employer_dashboard'))
+                    elif user_role == 'admin':
+                        return redirect(url_for('main.admin_dashboard'))
+                    else:
+                        # Handle invalid or unknown roles
+                        flash('Invalid user role detected. Please contact support.', 'error')
+                        session.clear()  # Clear invalid session
+                        return redirect(url_for('main.login'))
+                        
+                except Exception as role_error:
+                    # Handle role determination errors
+                    flash('Error determining user role. Please try again.', 'error')
+                    return redirect(url_for('main.login'))
+                    
             else:
-                return redirect(url_for('main.jobs'))  # Could redirect to job search
-        else:
-            flash('Invalid email or password. Please try again.', 'error')
+                flash('Invalid username or password. Please try again.', 'error')
+                return render_template('login.html')
+                
+        except Exception as e:
+            flash('Login failed. Please try again.', 'error')
+            return render_template('login.html')
     
     return render_template('login.html')
 

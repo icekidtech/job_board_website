@@ -9,24 +9,24 @@ class User(db.Model):
     """User model for both job seekers and employers"""
     __tablename__ = 'users'
     
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(80), unique=True, nullable=False, index=True)
-    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='seeker')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='seeker')  # 'seeker', 'employer', 'admin'
+    full_name = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Admin-specific fields
+    permissions = db.Column(db.Text)  # JSON string for permissions
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Profile fields
-    full_name = db.Column(db.String(100), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
     location = db.Column(db.String(100), nullable=True)
     bio = db.Column(db.Text, nullable=True)
-    
-    # Admin permissions fields - now properly integrated
-    permissions = db.Column(db.Text, default='{}')
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Fixed: should reference 'users.id'
     
     # Relationships
     job_postings = db.relationship('JobPosting', backref='employer', lazy=True, foreign_keys='JobPosting.employer_id')
@@ -45,7 +45,6 @@ class User(db.Model):
         self.created_by = created_by
         self.is_active = True
         self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
         
         # Set default permissions based on role
         if role == 'admin':
@@ -440,6 +439,22 @@ class User(db.Model):
             'can_view_analytics': True,
             'can_moderate_content': True
         }
+    
+    def get_role(self):
+        """Get user role with validation"""
+        return self.role.lower() if self.role else 'seeker'
+    
+    def is_valid_role(self):
+        """Validate if user has a valid role"""
+        valid_roles = ['seeker', 'employer', 'admin']
+        return self.role and self.role.lower() in valid_roles
+    
+    @staticmethod
+    def get_user_by_credentials(identifier):
+        """Get user by username or email"""
+        return User.query.filter(
+            (User.username == identifier) | (User.email == identifier)
+        ).first()
 
 
 class JobPosting(db.Model):
