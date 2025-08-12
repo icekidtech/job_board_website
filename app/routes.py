@@ -307,11 +307,8 @@ def register():
             
             flash(f'Account created successfully! Welcome to Job Board, {username}!', 'success')
             
-            # Redirect based on user role
-            if role == 'employer':
-                return redirect(url_for('main.jobs'))  # Could redirect to employer dashboard
-            else:
-                return redirect(url_for('main.jobs'))  # Could redirect to job search
+            # Redirect to appropriate dashboard based on user role
+            return redirect_to_user_dashboard(new_user.role)
                 
         except Exception as e:
             db.session.rollback()
