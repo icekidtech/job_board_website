@@ -13,12 +13,13 @@ A simple job board website built with Python Flask, HTML, CSS, JavaScript, and S
 ## Features
 
 - **User Authentication**: Secure registration and login system with role-based access for job seekers and employers
-- **User Management**: Role-based authentication with session management and password security
+- **Automatic Dashboard Access**: Users are automatically redirected to their appropriate dashboard upon login based on their role
 - **Job Postings**: Create, update, and manage job listings
+- **Job Search**: Keyword-based search functionality to find jobs by title, description, company, or location
 - **Application System**: Apply for jobs and track application status
 - **Database Models**: Well-structured SQLAlchemy models for users, jobs, and applications
 - **Modern UI**: Responsive design with Bootstrap 5, animations, and interactive components
-- **Enhanced UX**: Real-time form validation, loading states, and smooth animations
+- **Enhanced UX**: Real-time form validation, loading states, smooth animations, and seamless dashboard access
 
 ## Admin Management System
 
@@ -27,11 +28,11 @@ The application now includes comprehensive admin management capabilities with **
 ### Admin Features
 - **Admin Dashboard**: System overview with real-time statistics, user distribution, and health monitoring
 - **Permission Management**: Granular permission system hardcoded into the User model for:
-    - `manage_users`: User account management
-    - `manage_jobs`: Job posting oversight  
-    - `manage_applications`: Application review
-    - `view_reports`: System analytics access
-    - `system_settings`: Configuration management
+        - `manage_users`: User account management
+        - `manage_jobs`: Job posting oversight  
+        - `manage_applications`: Application review
+        - `view_reports`: System analytics access
+        - `system_settings`: Configuration management
 - **Admin Creation**: Secure interface for existing admins to create new administrators
 - **Security Features**: Role-based access control, input validation, and secure session management
 
@@ -45,17 +46,17 @@ from app.models import db, User
 
 app = create_app()
 with app.app_context():
-        admin = User.query.filter_by(username='admin').first()
-        if not admin:
-                admin = User(
-                        username='admin',
-                        email='admin@jobboard.com', 
-                        password='admin123',  # Change this!
-                        role='admin'
-                )
-                db.session.add(admin)
-                db.session.commit()
-                print("Admin created: admin / admin123")
+                admin = User.query.filter_by(username='admin').first()
+                if not admin:
+                                admin = User(
+                                                username='admin',
+                                                email='admin@jobboard.com', 
+                                                password='admin123',  # Change this!
+                                                role='admin'
+                                )
+                                db.session.add(admin)
+                                db.session.commit()
+                                print("Admin created: admin / admin123")
 ```
 
 **Option 2: Register as Admin**
@@ -99,9 +100,22 @@ The application includes a comprehensive authentication system featuring:
 - **Secure Registration**: User registration with password hashing and validation
 - **Session Management**: Flask sessions with configurable timeouts and "remember me" functionality
 - **Role-Based Access**: Differentiated access for job seekers and employers
+- **Automatic Dashboard Redirection**: Users are automatically directed to their role-specific dashboard after login
 - **Password Security**: Werkzeug password hashing with salt generation
 - **Form Validation**: Real-time validation with comprehensive error handling
 - **Dynamic Navigation**: Context-aware navigation based on authentication status
+
+### Dashboard Access Flow
+
+Upon successful login, users are automatically redirected to their appropriate dashboard:
+
+- **Job Seekers** → Job Seeker Dashboard (`/seeker_dashboard`)
+- **Employers** → Employer Dashboard (`/employer_dashboard`)  
+- **Administrators** → Admin Dashboard (`/admin_dashboard`)
+
+This streamlined approach eliminates manual navigation and provides immediate access to relevant tools and information.
+
+See the [detailed documentation](docs/detailed_explanation.md#automatic-dashboard-access) for complete automatic dashboard access specifications, error handling details, and implementation information.
 
 Users can register as either job seekers or employers, with the interface adapting to their role. The system includes comprehensive form validation, secure password handling, and persistent sessions.
 
@@ -219,3 +233,4 @@ This project is open source and available under the [MIT License](LICENSE).
 ## Support
 
 For questions or issues, please check the [detailed documentation](docs/detailed_explanation.md) or open an issue in the project repository.
+

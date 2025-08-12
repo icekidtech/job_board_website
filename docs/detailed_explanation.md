@@ -4,7 +4,253 @@
 <!-- 1. [Project Overview](#project-overview) -->
 2. [Architecture](#architecture)
 3. [Setup Instructions](#setup-instructions)
+# Job Board Website - Detailed Documentation
+
+## Table of Contents
+<!-- 1. [Project Overview](#project-overview) -->
+2. [Architecture](#architecture)
+3. [Setup Instructions](#setup-instructions)
 4. [Database Schema](#database-schema)
+5. [Database Models](#database-models)
+6. [Authentication System](#authentication-system)
+7. [Routes and Templates](#routes-and-templates)
+8. [Dashboard Features](#dashboard-features)
+9. [Real Data Integration](#real-data-integration)
+10. [API Endpoints](#api-endpoints)
+11. [Profile Management System](#profile-management-system)
+12. [Admin Dashboard and Permission Management](#admin-dashboard-and-permission-management)
+13. [Automatic Dashboard Access](#automatic-dashboard-access)
+14. [Development Guidelines](#development-guidelines)
+15. [User Interface Design](#user-interface-design)
+
+## Project Overview
+
+### Purpose
+This job board website allows employers to post job listings and job seekers to browse and apply for positions. The platform provides a simple, user-friendly interface for both posting and searching job opportunities.
+
+### Technology Stack
+- **Backend**: Python Flask
+- **Frontend**: HTML, CSS, JavaScript, Bootstrap 5
+- **Database**: MySQL with SQLAlchemy ORM
+- **Environment**: Python virtual environment
+
+### Key Features (Planned)
+- Job listing creation and management
+- Job search and filtering
+- User registration and authentication
+- Application tracking
+- Admin dashboard
+
+## Architecture
+
+### Project Structure
+```
+job_board_website/
+├── app/                    # Main application package
+│   ├── __init__.py        # App factory and DB connection test
+│   ├── models.py          # SQLAlchemy database models
+│   ├── routes.py          # Flask routes and views
+│   └── utils/             # Utility functions
+├── config/                # Configuration files
+│   └── db_config.py       # Database configuration
+├── docs/                  # Documentation
+│   └── detailed_explanation.md
+├── static/                # Static files (CSS, JS, images)
+│   ├── css/
+│   │   └── style.css      # Custom styles
+│   ├── js/
+│   │   └── main.js        # JavaScript functionality
+│   └── images/
+├── templates/             # Jinja2 HTML templates
+│   ├── base.html          # Base template with navigation
+│   ├── home.html          # Homepage template
+│   ├── jobs.html          # Job listings template
+│   ├── login.html         # Login form template
+│   ├── register.html      # Registration form template
+│   ├── about.html         # About page template
+│   └── errors/            # Error page templates
+│       ├── 404.html
+│       └── 500.html
+├── requirements.txt       # Python dependencies
+├── .env                   # Environment variables (not in git)
+├── .gitignore            # Git ignore rules
+├── run.py                # Application runner script
+└── readme.md             # Brief project overview
+```
+
+## Setup Instructions
+
+### Prerequisites
+- Python 3.8+
+- MySQL 8.0+
+- pip (Python package manager)
+
+### 1. Environment Setup
+```bash
+# Clone or navigate to project directory
+cd /path/to/job_board_website
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 2. Database Setup
+```bash
+# Install MySQL (if not already installed)
+sudo apt install mysql-server
+
+# Start MySQL service
+sudo systemctl start mysql
+
+# Create database and user (run in MySQL console)
+mysql -u root -p
+```
+
+```sql
+CREATE DATABASE job_board_db;
+CREATE USER 'job_user'@'localhost' IDENTIFIED BY 'job_password';
+GRANT ALL PRIVILEGES ON job_board_db.* TO 'job_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+### 3. Environment Configuration
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit .env file with your database credentials
+nano .env
+```
+
+### 4. Test Database Connection
+```bash
+# Run the database connection test
+python app/__init__.py
+```
+
+### 5. Run the Application
+
+```bash
+# Start the Flask development server
+python run.py
+
+# Alternative: using Flask CLI
+flask run
+```
+
+### 6. Create Admin User (Optional)
+
+To access admin features, create an admin user:
+
+```bash
+# Create admin script
+python -c "
+from app import create_app
+from app.models import db, User
+
+app = create_app()
+with app.app_context():
+        admin = User(
+                username='admin',
+                email='admin@jobboard.com',
+                password='admin123',
+                role='admin'
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print('Admin created: admin / admin123')
+"
+```
+
+**Important**: Change the default password after first login!
+
+## Database Schema
+
+### Database Tables Overview
+
+The job board application uses three main tables to manage users, job postings, and applications:
+
+1. **users** - Stores user accounts for both job seekers and employers
+2. **job_postings** - Contains job listings created by employers
+3. **applications** - Tracks job applications submitted by seekers
+
+### Entity Relationship Diagram
+
+```
+users (1) ----< job_postings (1) ----< applications (n)
+                |                                         ^
+                |                                         |
+                +----------- seeker_id ------------------+
+```
+
+## Database Models
+
+### User Model (`users` table)
+
+The User model handles both job seekers and employers with role-based differentiation.
+
+**Fields:**
+- `id` (Integer, Primary Key) - Unique user identifier
+- `username` (String(80), Unique, Required) - User's display name
+- `email` (String(120), Unique, Required) - User's email address
+- `password` (String(255), Required) - Hashed password for security
+- `role` (Enum: 'seeker'/'employer', Required) - User type with default 'seeker'
+- `created_at` (DateTime, Required) - Account creation timestamp
+- `updated_at` (DateTime, Required) - Last profile update timestamp
+- `is_active` (Boolean, Required) - Account status flag
+
+**Relationships:**
+- One-to-many with JobPosting (as employer)
+- One-to-many with Application (as seeker)
+
+**Key Features:**
+- Password hashing using Werkzeug security functions
+- Role-based access control
+- Automatic timestamp management
+- Data serialization methods
+
+### JobPosting Model (`job_postings` table)
+
+The JobPosting model represents job listings created by employers.
+
+**Fields:**
+- `id` (Integer, Primary Key) - Unique job posting identifier
+- `title` (String(200), Required) - Job position title
+- `description` (Text, Required) - Detailed job description
+- `company_name` (String(100), Optional) - Company/organization name
+- `location` (String(100), Optional) - Job location
+- `salary_range` (String(50), Optional) - Salary information
+- `job_type` (Enum: 'full-time'/'part-time'/'contract'/'internship') - Employment type
+- `employer_id` (Integer, Foreign Key to users.id, Required) - Job poster reference
+- `posted_date` (DateTime, Required) - Job posting creation timestamp
+- `updated_at` (DateTime, Required) - Last job update timestamp
+- `is_active` (Boolean, Required) - Job posting status
+- `deadline` (DateTime, Optional) - Application deadline
+
+**Relationships:**
+- Many-to-one with User (employer)
+- One-to-many with Application
+
+**Key Features:**
+- Flexible job type categorization
+- Deadline tracking with expiration checks
+- Cascade deletion of related applications
+- Employer information integration
+
+### Application Model (`applications` table)
+
+The Application model tracks job applications submitted by seekers.
+
+**Fields:**
+-
 5. [Database Models](#database-models)
 6. [Authentication System](#authentication-system)
 7. [Routes and Templates](#routes-and-templates)

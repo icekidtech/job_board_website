@@ -172,69 +172,81 @@ def apply_job(job_id):
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
-    """Login route - handles user authentication"""
+    """Login route - handles user authentication with automatic dashboard redirection"""
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
         password = request.form.get('password', '').strip()
         remember_me = request.form.get('remember_me') == 'on'
         
+        print(f"Login attempt - Email: {email}, Password length: {len(password) if password else 0}")
+        
         # Validate input
-        if not username or not password:
-            flash('Username and password are required.', 'error')
+        if not email or not password:
+            flash('Email and password are required.', 'error')
             return render_template('login.html')
         
         try:
-            # Find user by username or email
-            user = User.query.filter(
-                (User.username == username) | (User.email == username)
-            ).first()
+            # Find user by email (simplified approach)
+            user = User.query.filter_by(email=email).first()
+            print(f"User found: {user is not None}")
             
-            if user and check_password_hash(user.password, password):
-                # Store user information in session
-                session['user_id'] = user.id
-                session['username'] = user.username
-                session['user_role'] = user.role
-                session['logged_in'] = True
+            if user:
+                print(f"User role: {user.role}")
+                password_match = check_password_hash(user.password, password)
+                print(f"Password match: {password_match}")
                 
-                # Set session timeout
-                if remember_me:
-                    session.permanent = True
+                if password_match:
+                    # Store user information in session
+                    session['user_id'] = user.id
+                    session['username'] = user.username
+                    session['user_role'] = user.role
+                    session['user_email'] = user.email
+                    
+                    # Set session permanent if remember me is checked
+                    if remember_me:
+                        session.permanent = True
+                    
+                    # Update last login (optional - only if column exists)
+                    try:
+                        user.last_login = datetime.now()
+                        db.session.commit()
+                    except Exception as e:
+                        print(f"Could not update last_login: {e}")
+                        # Continue without updating last_login
+                    
+                    flash(f'Welcome back, {user.username}!', 'success')
+                    
+                    # Role-based dashboard redirection
+                    try:
+                        if user.role == 'seeker':
+                            return redirect(url_for('main.seeker_dashboard'))
+                        elif user.role == 'employer':
+                            return redirect(url_for('main.employer_dashboard'))
+                        elif user.role == 'admin':
+                            return redirect(url_for('main.admin_dashboard'))
+                        else:
+                            # Handle unknown role
+                            flash('Unknown user role detected. Please contact support.', 'warning')
+                            return redirect(url_for('main.home'))
+                            
+                    except Exception as redirect_error:
+                        print(f"Redirection error: {redirect_error}")
+                        # Handle redirection errors
+                        flash('Dashboard access error. Redirecting to home page.', 'warning')
+                        return redirect(url_for('main.home'))
                 else:
-                    session.permanent = False
-                
-                # Update last login timestamp
-                user.last_login = datetime.now()
-                db.session.commit()
-                
-                flash(f'Welcome back, {user.username}!', 'success')
-                
-                # Role-based dashboard redirection
-                try:
-                    user_role = user.role.lower()
-                    
-                    if user_role == 'seeker':
-                        return redirect(url_for('main.seeker_dashboard'))
-                    elif user_role == 'employer':
-                        return redirect(url_for('main.employer_dashboard'))
-                    elif user_role == 'admin':
-                        return redirect(url_for('main.admin_dashboard'))
-                    else:
-                        # Handle invalid or unknown roles
-                        flash('Invalid user role detected. Please contact support.', 'error')
-                        session.clear()  # Clear invalid session
-                        return redirect(url_for('main.login'))
-                        
-                except Exception as role_error:
-                    # Handle role determination errors
-                    flash('Error determining user role. Please try again.', 'error')
-                    return redirect(url_for('main.login'))
-                    
+                    flash('Invalid email or password. Please try again.', 'error')
+                    return render_template('login.html')
             else:
-                flash('Invalid username or password. Please try again.', 'error')
+                flash('Invalid email or password. Please try again.', 'error')
                 return render_template('login.html')
                 
         except Exception as e:
-            flash('Login failed. Please try again.', 'error')
+            print(f"Login exception: {e}")
+            print(f"Exception type: {type(e)}")
+            import traceback
+            traceback.print_exc()
+            flash('Login error occurred. Please try again.', 'error')
             return render_template('login.html')
     
     return render_template('login.html')
